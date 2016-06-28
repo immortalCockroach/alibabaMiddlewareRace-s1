@@ -34,7 +34,7 @@ public class Producer {
         DefaultMQProducer producer = new DefaultMQProducer("unique_group");
 
         //在本地搭建好broker后,记得指定nameServer的地址
-        //producer.setNamesrvAddr("127.0.0.1:9876");
+        producer.setNamesrvAddr(RaceConfig.TairConfigServer);
 
         producer.start();
 
