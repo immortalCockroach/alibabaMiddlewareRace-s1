@@ -8,6 +8,11 @@ import backtype.storm.topology.TopologyBuilder;
 
 public class RaceTopology {
 
+	/**
+	 * 最大worker数不超过4,每个worker的task数量不超过6
+	 * 计算参考链接http://shiyanjun.cn/archives/1472.html
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Config conf = new Config();
@@ -17,7 +22,7 @@ public class RaceTopology {
         int spout_Parallelism_hint = 4;
         int split_Parallelism_hint = 4;
         int count_Parallelism_hint = 4;
-        conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 100000);
+        conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 200000);
         
         TopologyBuilder builder = new TopologyBuilder();
         
