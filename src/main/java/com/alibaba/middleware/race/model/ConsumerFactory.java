@@ -13,7 +13,7 @@ public class ConsumerFactory {
 		pushConsumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
 		// 正式提交的时候去掉这行
-		pushConsumer.setNamesrvAddr("10.109.247.167:9876");
+//		pushConsumer.setNamesrvAddr("10.109.247.167:9876");
 		// consumer.start();
 		pushConsumer.subscribe(RaceConfig.MqPayTopic, "*");
 		pushConsumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
@@ -23,8 +23,6 @@ public class ConsumerFactory {
 		pushConsumer.setPullBatchSize(64);
 		
 		pushConsumer.registerMessageListener(listener);
-		pushConsumer.setConsumeThreadMin(1);
-		pushConsumer.setConsumeThreadMin(2);
 		pushConsumer.start();
 		
 		return pushConsumer;
