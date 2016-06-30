@@ -71,7 +71,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				if (flowControl) {
 					emitQueue.offer(new MetaTuple("0", paymentMessage));
 				} else {
-					sendMetaTuple(new MetaTuple("0", paymentMessage));
+					sendTuple("0", paymentMessage);
 				}
 				break;
 			case RaceConfig.MqTmallTradeTopic:
@@ -79,7 +79,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				if (flowControl) {
 					emitQueue.offer(new MetaTuple("1", tmallMessage));
 				} else {
-					sendMetaTuple(new MetaTuple("1", tmallMessage));
+					sendTuple("1", tmallMessage);
 				}
 				break;
 			case RaceConfig.MqTaobaoTradeTopic:
@@ -87,7 +87,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				if (flowControl) {
 					emitQueue.offer(new MetaTuple("2", taobaoMessage));
 				} else {
-					sendMetaTuple(new MetaTuple("2", taobaoMessage));
+					sendTuple("2", taobaoMessage);
 				}
 				break;
 			default:
@@ -98,11 +98,26 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 		return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
 	}
 
+	/**
+	 * 阻塞队列emit
+	 * @param tuple
+	 */
 	public void sendMetaTuple(MetaTuple tuple) {
-		List<Object> values = new Values(tuple.getTopic(), tuple.getMessage());
+		List<Object> values = new Values(tuple.getTopicIdentifier(), tuple.getMessage());
+		
+		// 将message作为messageId
+		spoutCollector.emit(values, tuple.getMessage());
+	}
 
-		spoutCollector.emit(values, tuple);
-
+	/**
+	 * 直接emits 
+	 * @param topicIdentifier
+	 * @param message
+	 */
+	public void sendTuple(String topicIdentifier, Object message) {
+		List<Object> values = new Values(topicIdentifier, message);
+		// 将message作为messageId
+		spoutCollector.emit(values, message);
 	}
 
 	@Override
