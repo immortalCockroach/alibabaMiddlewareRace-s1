@@ -105,5 +105,13 @@ public class OrderMessage implements Serializable{
     public void setCreateTime(long createTime) {
         this.createTime = createTime;
     }
+    
+	public void reducePrice(double price) {
+		this.totalPrice -= price;
+	}
+
+	public boolean isZero() {
+		return Math.abs(this.totalPrice) < 0.005;
+	}
 
 }
