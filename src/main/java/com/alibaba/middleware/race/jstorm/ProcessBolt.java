@@ -113,6 +113,7 @@ public class ProcessBolt implements IRichBolt {
 			OrderMessage orderMessage = taobaoOrderMap.get(orderId);
 			// taobao订单
 			if (orderMessage != null) {
+				// 将reducePrice和isZero方法设置为synchronized 防止同一个对象的竞争条件
 				orderMessage.reducePrice(price);
 				if (orderMessage.isZero()) {
 					taobaoOrderMap.remove(orderId);
@@ -124,6 +125,7 @@ public class ProcessBolt implements IRichBolt {
 				// Tmall订单
 				orderMessage = tmallOrderMap.get(orderId);
 				if (orderMessage != null) {
+					// 同上
 					orderMessage.reducePrice(price);
 					if (orderMessage.isZero()) {
 						tmallOrderMap.remove(orderId);
