@@ -90,7 +90,7 @@ public class ProcessBolt implements IRichBolt {
 		// });
 		// traverseThread.start();
 
-		logger.info("ZY processBolt init finished.");
+		logger.info(RaceConfig.LogTracker + "ZY processBolt init finished.");
 	}
 
 	@Override
@@ -100,7 +100,7 @@ public class ProcessBolt implements IRichBolt {
 		Object message = input.getValue(1);
 
 		if (message == null) {
-			logger.error("ZY processBolt message is null:" + topicIdentifier);
+			logger.error(RaceConfig.LogTracker + "ZY processBolt message is null:" + topicIdentifier);
 			return;
 		}
 		switch (topicIdentifier) {
@@ -135,7 +135,7 @@ public class ProcessBolt implements IRichBolt {
 					collector.ack(input);
 				} else {
 					// 没找到直接fail
-					logger.warn("ZY processBolt payMessage not found:" + orderId);
+					logger.warn(RaceConfig.LogTracker + "ZY processBolt payMessage not found:" + orderId);
 					collector.fail(input);
 				}
 			}
@@ -150,7 +150,7 @@ public class ProcessBolt implements IRichBolt {
 			collector.ack(input);
 			break;
 		default:
-			logger.error("ZY processBolt unrecognized Identifier:" + topicIdentifier);
+			logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier);
 			break;
 		}
 

@@ -53,7 +53,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 			consumer = ConsumerFactory.mkPushConsumerInstance(this);
 		} catch (MQClientException e) {
 			// TODO Auto-generated catch block
-			logger.error("ZY spout failed to create pushconsumer", e);
+			logger.error(RaceConfig.LogTracker + "ZY spout failed to create pushconsumer", e);
 		}
 		emitQueue = new LinkedBlockingQueue<MetaTuple>();
 		// 初始设置flowControl为true 防止一开始pay消息发送过多，在ProcessBolt中找不到对应的Order而产生fail信息
@@ -62,7 +62,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 		ackNumber = new AtomicInteger(0);
 		failNumber = new AtomicInteger(0);
 
-		logger.info("ZY spout init finished.");
+		logger.info(RaceConfig.LogTracker + "ZY spout init finished.");
 
 	}
 
@@ -76,7 +76,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 			body = msg.getBody();
 
 			if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-				logger.info("ZY spout" + topic + "ends soon");
+				logger.info(RaceConfig.LogTracker + "ZY spout" + topic + "ends soon");
 				continue;
 			}
 
@@ -89,7 +89,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 					try {
 						emitQueue.put(new MetaTuple(paymentMessage));
 					} catch (InterruptedException e) {
-						logger.info("ZY spout put PAY operation interupt:" + e.getMessage(), e);
+						logger.info(RaceConfig.LogTracker + "ZY spout put PAY operation interupt:" + e.getMessage(), e);
 					}
 				} else {
 					sendPayMessage(new MetaTuple(paymentMessage));
@@ -109,7 +109,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				break;
 
 			default:
-				logger.error("ZY spout contains topic except of 3 above" + topic);
+				logger.error(RaceConfig.LogTracker + "ZY spout contains topic except of 3 above" + topic);
 				break;
 			}
 		}
@@ -152,7 +152,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 		try {
 			payMessage = emitQueue.take();
 		} catch (InterruptedException e) {
-			logger.info("ZY spout take operation interupt:" + e.getMessage(), e);
+			logger.info(RaceConfig.LogTracker + "ZY spout take operation interupt:" + e.getMessage(), e);
 		}
 
 		if (payMessage == null) {
@@ -170,7 +170,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 			int failNum = failNumber.incrementAndGet();
 			int ackNum = ackNumber.get();
 			if (failNum >= RaceConfig.ThresholdFail && failNum != 0 && ((ackNum / failNum) <= 5)) {
-				logger.info("ZY spout enables flowControl.");
+				logger.info(RaceConfig.LogTracker + "ZY spout enables flowControl.");
 				flowControl = true;
 				ackNumber.set(0);
 				failNumber.set(0);
@@ -186,7 +186,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				try {
 					emitQueue.put(tuple);
 				} catch (InterruptedException e) {
-					logger.info("ZY spout pay wait for re-emit interrupt:" + e.getMessage(), e);
+					logger.info(RaceConfig.LogTracker + "ZY spout pay wait for re-emit interrupt:" + e.getMessage(), e);
 				}
 				// try {
 				// tuple.waitForEmit();
@@ -196,7 +196,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				// }
 				// spoutCollector.emit(values, msgId);
 			} else {
-				logger.warn("ZY spout payMessage failed more than 6 times,payMsg:" + tuple.getMessage());
+				logger.warn(RaceConfig.LogTracker + "ZY spout payMessage failed more than 6 times,payMsg:" + tuple.getMessage());
 			}
 		} else {
 			// 订单信息直接重新发送
@@ -211,7 +211,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 			int ackNum = ackNumber.incrementAndGet();
 			int failNum = failNumber.get();
 			if (ackNum >= RaceConfig.ThresholdACK && failNum != 0 && ((ackNum / failNum) >= 20)) {
-				logger.info("ZY spout disables flowControl.");
+				logger.info(RaceConfig.LogTracker + "ZY spout disables flowControl.");
 				flowControl = false;
 				ackNumber.set(0);
 				failNumber.set(0);
