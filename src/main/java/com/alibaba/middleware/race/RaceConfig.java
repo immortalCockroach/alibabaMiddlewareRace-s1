@@ -10,9 +10,9 @@ public class RaceConfig implements Serializable {
 
 	// 这些是写tair key的前缀
 	private static final String TeamCode = "41055ps41v";
-	public static final String PrexTmall = "platformTmall_" + TeamCode;
-	public static final String PrexTaobao = "platformTaobao_" + TeamCode;
-	public static final String PrexRatio = "ratio_" + TeamCode;
+	public static final String PrexTmall = "platformTmall_" + TeamCode + "_";
+	public static final String PrexTaobao = "platformTaobao_" + TeamCode + "_";
+	public static final String PrexRatio = "ratio_" + TeamCode + "_";
 
 	// 这些jstorm/rocketMq/tair 的集群配置信息，这些配置信息在正式提交代码前会被公布
 	public static final String JstormTopologyName = "41055ps41v";
@@ -40,7 +40,7 @@ public class RaceConfig implements Serializable {
 	public static final int processOrderMapInitSegments = 64;
 
 	public static final int processMapEntryArraySize = 32;
-	
+
 	public static final int ThresholdACK = 100000;
 
 	public static final int ThresholdFail = 100000;
