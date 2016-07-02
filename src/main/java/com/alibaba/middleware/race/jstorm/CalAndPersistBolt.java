@@ -46,9 +46,13 @@ public class CalAndPersistBolt implements IRichBolt {
 
 	private int writeCount;
 
+	private OutputCollector collector;
+
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		// TODO Auto-generated method stub
+
+		this.collector = collector;
 
 		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
 		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
@@ -189,6 +193,8 @@ public class CalAndPersistBolt implements IRichBolt {
 						+ payMessage);
 			}
 		}
+		
+		collector.ack(input);
 	}
 
 	private static double round2(double value) {
@@ -255,7 +261,6 @@ public class CalAndPersistBolt implements IRichBolt {
 				code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + mapping.getKey(),
 						round2(wireLessValue / pcValue));
 			}
-
 
 			if (!code.isSuccess()) {
 				logger.error(RaceConfig.LogTracker + "ZY CalBolt put ratio error,code" + code.getCode() + ",message:"
