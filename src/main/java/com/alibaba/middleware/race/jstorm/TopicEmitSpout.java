@@ -117,7 +117,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 	}
 
 	/**
-	 * Pay的发送方式，可能是直接发送或者阻塞队列发送(由于可能重发，因此需要设置failTime等)
+	 * Pay的发送方式，可能是直接发送或者阻塞队列发送(由于可能重发，因此需要设置failTime等)，发送的数据格式为Id MetaTuple
 	 * 
 	 * @param tuple
 	 */
@@ -129,7 +129,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 	}
 
 	/**
-	 * 订单的发送方式
+	 * 订单的发送方式， 发送的数据格式为Id OrderMessage
 	 * 
 	 * @param topicIdentifier
 	 * @param message
@@ -196,7 +196,8 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				// }
 				// spoutCollector.emit(values, msgId);
 			} else {
-				logger.warn(RaceConfig.LogTracker + "ZY spout payMessage failed more than 6 times,payMsg:" + tuple.getMessage());
+				logger.warn(RaceConfig.LogTracker + "ZY spout payMessage failed more than 5 times,payMsg:"
+						+ tuple.getMessage());
 			}
 		} else {
 			// 订单信息直接重新发送
