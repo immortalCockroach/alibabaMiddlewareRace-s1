@@ -120,6 +120,8 @@ public class ProcessBolt implements IRichBolt {
 					taobaoOrderMap.remove(orderId);
 				}
 				// taobao付款消息
+				logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve taobaoOrder,identifier:" + topicIdentifier
+						+ ",key" + orderId);
 				sendMessage(input, RaceConfig.TaobaoIdentifier, payMessage);
 				collector.ack(input);
 			} else {
@@ -131,6 +133,9 @@ public class ProcessBolt implements IRichBolt {
 					if (orderMessage.isZero()) {
 						tmallOrderMap.remove(orderId);
 					}
+					
+					logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve tmallOrder,identifier:" + topicIdentifier
+							+ ",key" + orderId);
 					// tmall付款消息
 					sendMessage(input, RaceConfig.TmallIdentifier, payMessage);
 					collector.ack(input);
@@ -143,10 +148,14 @@ public class ProcessBolt implements IRichBolt {
 
 			break;
 		case RaceConfig.TmallIdentifier:
+			logger.info(RaceConfig.LogTracker + "ZY processBolt get tmallOrder,identifier:" + topicIdentifier
+					+ ",key" + ((OrderMessage) message).getOrderId());
 			tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			collector.ack(input);
 			break;
 		case RaceConfig.TaobaoIdentifier:
+			logger.info(RaceConfig.LogTracker + "ZY processBolt get taobaoOrder,identifier:" + topicIdentifier
+					+ ",key" + ((OrderMessage) message).getOrderId());
 			taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			collector.ack(input);
 			break;
