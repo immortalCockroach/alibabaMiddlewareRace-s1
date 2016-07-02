@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.model.MetaTuple;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
 
@@ -107,7 +108,7 @@ public class ProcessBolt implements IRichBolt {
 		// 当处理pay订单的时候，如果此时pay订单找不到taobao或者tmall的orderId，则默认为fail(虽然确实是成功了)
 		// 然后超时fail堆积产生flowControl效果
 		case RaceConfig.PayIdentifier:
-			PaymentMessage payMessage = (PaymentMessage) message;
+			PaymentMessage payMessage = ((MetaTuple) message).getMessage();
 			Long orderId = payMessage.getOrderId();
 			double price = payMessage.getPayAmount();
 			OrderMessage orderMessage = taobaoOrderMap.get(orderId);
@@ -150,7 +151,8 @@ public class ProcessBolt implements IRichBolt {
 			collector.ack(input);
 			break;
 		default:
-			logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier);
+			logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier
+					+ ",message:" + message);
 			break;
 		}
 
