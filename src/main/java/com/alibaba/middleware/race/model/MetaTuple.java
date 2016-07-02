@@ -1,7 +1,5 @@
 package com.alibaba.middleware.race.model;
 
-import edu.emory.mathcs.backport.java.util.concurrent.CountDownLatch;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -15,21 +13,21 @@ public class MetaTuple {
 
 	private PaymentMessage message;
 	public static final int MAX_FAIL_TIMES = 5;
-	private CountDownLatch latch;
+	// private CountDownLatch latch;
 
 	public MetaTuple(PaymentMessage message) {
 		this.message = message;
 		this.failTimes = new AtomicInteger(0);
-		latch = new CountDownLatch(1);
+		// latch = new CountDownLatch(1);
 	}
 
 	public PaymentMessage getMessage() {
 		return message;
 	}
 
-	public void waitForEmit() throws InterruptedException {
-		latch.await(1, TimeUnit.SECONDS);
-	}
+	// public void waitForEmit() throws InterruptedException {
+	// latch.await(1, TimeUnit.SECONDS);
+	// }
 
 	public int getFailTimes() {
 		return failTimes.intValue();
