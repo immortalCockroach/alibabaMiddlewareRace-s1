@@ -15,6 +15,12 @@ public class MetaTuple {
 	public static final int MAX_FAIL_TIMES = 5;
 	// private CountDownLatch latch;
 
+	
+	// Kryo默认需要无参数构造函数
+	public MetaTuple() {
+
+	}
+
 	public MetaTuple(PaymentMessage message) {
 		this.message = message;
 		this.failTimes = new AtomicInteger(0);
