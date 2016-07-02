@@ -9,6 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -48,6 +49,8 @@ public class CalAndPersistBolt implements IRichBolt {
 
 	private OutputCollector collector;
 
+	private AtomicInteger payCount;
+
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		// TODO Auto-generated method stub
@@ -63,6 +66,7 @@ public class CalAndPersistBolt implements IRichBolt {
 		ratioLock = new ReentrantLock();
 
 		writeCount = 0;
+		payCount = new AtomicInteger(0);
 
 		List<String> confServers = new ArrayList<String>();
 		confServers.add(RaceConfig.TairConfigServer);
@@ -97,6 +101,11 @@ public class CalAndPersistBolt implements IRichBolt {
 		// TODO Auto-generated method stub
 		String identifier = input.getString(0);
 		PaymentMessage payMessage = (PaymentMessage) input.getValue(1);
+
+		if (payCount.incrementAndGet() > 100000) {
+			logger.info(RaceConfig.LogTracker + "ZY CalBolt get more than 10w");
+			payCount.set(0);
+		}
 
 		Long timeKey = (payMessage.getCreateTime() / 1000 / 60) * 60;
 		double amount = payMessage.getPayAmount();

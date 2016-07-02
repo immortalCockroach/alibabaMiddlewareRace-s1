@@ -133,29 +133,32 @@ public class ProcessBolt implements IRichBolt {
 					if (orderMessage.isZero()) {
 						tmallOrderMap.remove(orderId);
 					}
-					
-					logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve tmallOrder,identifier:" + topicIdentifier
-							+ ",key" + orderId);
+
+					logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve tmallOrder,identifier:"
+							+ topicIdentifier + ",key" + orderId);
 					// tmall付款消息
 					sendMessage(input, RaceConfig.TmallIdentifier, payMessage);
 					collector.ack(input);
 				} else {
 					// 没找到直接fail
-					logger.warn(RaceConfig.LogTracker + "ZY processBolt payMessage not found:" + orderId);
+					// logger.warn(RaceConfig.LogTracker + "ZY processBolt
+					// payMessage not found:" + orderId);
 					collector.fail(input);
 				}
 			}
 
 			break;
 		case RaceConfig.TmallIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt get tmallOrder,identifier:" + topicIdentifier
-					+ ",key" + ((OrderMessage) message).getOrderId());
+			// logger.info(RaceConfig.LogTracker + "ZY processBolt get
+			// tmallOrder,identifier:" + topicIdentifier
+			// + ",key" + ((OrderMessage) message).getOrderId());
 			tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			collector.ack(input);
 			break;
 		case RaceConfig.TaobaoIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt get taobaoOrder,identifier:" + topicIdentifier
-					+ ",key" + ((OrderMessage) message).getOrderId());
+			// logger.info(RaceConfig.LogTracker + "ZY processBolt get
+			// taobaoOrder,identifier:" + topicIdentifier
+			// + ",key" + ((OrderMessage) message).getOrderId());
 			taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			collector.ack(input);
 			break;
