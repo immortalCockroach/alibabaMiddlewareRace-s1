@@ -18,7 +18,6 @@ public class RaceTopology {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-		// LocalCluster cluster = new LocalCluster();
 
 		Config conf = new Config();
 
@@ -27,7 +26,6 @@ public class RaceTopology {
 		int spout_Parallelism_hint = 2;
 		int process_Parallelism_hint = 3;
 		int cal_Parallelism_hint = 3;
-		// 10w是flowControl之前的阈值 这里设置20w来继续缩小pay的发送量
 		conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 200000);
 
 		TopologyBuilder builder = new TopologyBuilder();
@@ -44,9 +42,6 @@ public class RaceTopology {
 
 		try {
 			StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
-
-			// cluster.submitTopology(topologyName, conf,
-			// builder.createTopology());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
