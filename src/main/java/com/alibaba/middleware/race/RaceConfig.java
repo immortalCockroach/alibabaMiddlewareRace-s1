@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class RaceConfig implements Serializable {
 
-	public static final String LogTracker = "ZYTrack2";
+	public static final String LogTracker = "ZYTrack3";
 	
 	public static final String PayIdentifier = "0";
 	public static final String TmallIdentifier = "1";
