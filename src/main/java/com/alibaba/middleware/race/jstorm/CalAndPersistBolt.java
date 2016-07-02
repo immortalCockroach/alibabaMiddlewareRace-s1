@@ -244,9 +244,19 @@ public class CalAndPersistBolt implements IRichBolt {
 			// 下一次迭代作准备
 			pcAddi = pcValue;
 			wirelessAddi = wireLessValue;
-			// ratio需要保留2位小数
-			ResultCode code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + mapping.getKey(),
-					round2(wireLessValue / pcValue));
+
+			ResultCode code;
+
+			// ratio需要保留2位小数,顺便防止PC值为接近0的情况(虽然这个基本没可能)
+			if (Math.abs(pcValue) < 0.0001) {
+				code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + mapping.getKey(),
+						round2(wireLessValue));
+			} else {
+				code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + mapping.getKey(),
+						round2(wireLessValue / pcValue));
+			}
+
+
 			if (!code.isSuccess()) {
 				logger.error(RaceConfig.LogTracker + "ZY CalBolt put ratio error,code" + code.getCode() + ",message:"
 						+ code.getMessage() + ",data:" + mapping.getKey());
