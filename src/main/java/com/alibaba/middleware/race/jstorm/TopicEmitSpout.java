@@ -3,6 +3,7 @@ package com.alibaba.middleware.race.jstorm;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
 public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, IAckValueSpout, IFailValueSpout {
 

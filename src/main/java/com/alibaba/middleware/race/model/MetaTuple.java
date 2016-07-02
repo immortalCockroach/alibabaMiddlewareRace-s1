@@ -1,6 +1,6 @@
 package com.alibaba.middleware.race.model;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 为了PaymentMessage的流量和重发控制而定义的封装结构,设置了最大重发次数5，超过5次丢弃
