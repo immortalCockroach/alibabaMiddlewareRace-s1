@@ -180,16 +180,23 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 		if (msgId instanceof MetaTuple) {
 			MetaTuple tuple = (MetaTuple) values.get(1);
 			tuple.incrFailTimes();
-			// 重发次数大于MAX则抛弃
+			// 重发次数大于MAX(默认5次)则抛弃
 			if (tuple.getFailTimes() <= MetaTuple.MAX_FAIL_TIMES) {
+				// 加入队列末尾，延迟一段时间
 				try {
-					tuple.waitForEmit();
+					emitQueue.put(tuple);
 				} catch (InterruptedException e) {
 					logger.info("ZY spout pay wait for re-emit interrupt:" + e.getMessage(), e);
 				}
-				spoutCollector.emit(values, msgId);
+				// try {
+				// tuple.waitForEmit();
+				// } catch (InterruptedException e) {
+				// logger.info("ZY spout pay wait for re-emit interrupt:" +
+				// e.getMessage(), e);
+				// }
+				// spoutCollector.emit(values, msgId);
 			} else {
-				logger.warn("ZY spout payMessage failed more than 5 times,payMsg:" + tuple.getMessage());
+				logger.warn("ZY spout payMessage failed more than 6 times,payMsg:" + tuple.getMessage());
 			}
 		} else {
 			// 订单信息直接重新发送
