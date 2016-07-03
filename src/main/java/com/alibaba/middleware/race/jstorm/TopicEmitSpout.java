@@ -85,27 +85,27 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				// 用字符串0代表pay消息
 				PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
 				// 在flowControl模式下 使用阻塞队列来发送Pay的信息
-				if (flowControl) {
-					try {
-						emitQueue.put(new MetaTuple(paymentMessage));
-					} catch (InterruptedException e) {
-						logger.info(RaceConfig.LogTracker + "ZY spout put PAY operation interupt:" + e.getMessage(), e);
-					}
-				} else {
+//				if (flowControl) {
+//					try {
+//						emitQueue.put(new MetaTuple(paymentMessage));
+//					} catch (InterruptedException e) {
+//						logger.info(RaceConfig.LogTracker + "ZY spout put PAY operation interupt:" + e.getMessage(), e);
+//					}
+//				} else {
 					sendPayMessage(new MetaTuple(paymentMessage));
-				}
+//				}
 				break;
 
 			case RaceConfig.MqTmallTradeTopic:
 				// 1代表Tmall消息
-				OrderMessage tmallMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-				sendOrderMessage(RaceConfig.TmallIdentifier, tmallMessage);
+//				OrderMessage tmallMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
+//				sendOrderMessage(RaceConfig.TmallIdentifier, tmallMessage);
 				break;
 
 			case RaceConfig.MqTaobaoTradeTopic:
 				// 2带代表Taobao消息
-				OrderMessage taobaoMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-				sendOrderMessage(RaceConfig.TaobaoIdentifier, taobaoMessage);
+//				OrderMessage taobaoMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
+//				sendOrderMessage(RaceConfig.TaobaoIdentifier, taobaoMessage);
 				break;
 
 			default:
@@ -166,58 +166,58 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 	@Override
 	public void fail(Object msgId, List<Object> values) {
 		// 如果非flowControl下 failNum数量过大，且超过20%则进入flowControl模式
-		if (!flowControl) {
-			int failNum = failNumber.incrementAndGet();
-			int ackNum = ackNumber.get();
-			if (failNum >= RaceConfig.ThresholdFail && failNum != 0 && ((ackNum / failNum) <= 5)) {
-				logger.info(RaceConfig.LogTracker + "ZY spout enables flowControl.");
-				flowControl = true;
-				ackNumber.set(0);
-				failNumber.set(0);
-			}
-		}
-		// 说明是pay的信息
-		if (msgId instanceof MetaTuple) {
-			MetaTuple tuple = (MetaTuple) values.get(1);
-			tuple.incrFailTimes();
-			// 重发次数大于MAX(默认5次)则抛弃
-			if (tuple.getFailTimes() <= MetaTuple.MAX_FAIL_TIMES) {
-				// 加入队列末尾，延迟一段时间
-				try {
-					emitQueue.put(tuple);
-				} catch (InterruptedException e) {
-					logger.info(RaceConfig.LogTracker + "ZY spout pay wait for re-emit interrupt:" + e.getMessage(), e);
-				}
-				// try {
-				// tuple.waitForEmit();
-				// } catch (InterruptedException e) {
-				// logger.info("ZY spout pay wait for re-emit interrupt:" +
-				// e.getMessage(), e);
-				// }
-				// spoutCollector.emit(values, msgId);
-			} else {
-				logger.warn(RaceConfig.LogTracker + "ZY spout payMessage failed more than 5 times,payMsg:"
-						+ tuple.getMessage());
-			}
-		} else {
-			// 订单信息直接重新发送
-			spoutCollector.emit(values, msgId);
-		}
+//		if (!flowControl) {
+//			int failNum = failNumber.incrementAndGet();
+//			int ackNum = ackNumber.get();
+//			if (failNum >= RaceConfig.ThresholdFail && failNum != 0 && ((ackNum / failNum) <= 5)) {
+//				logger.info(RaceConfig.LogTracker + "ZY spout enables flowControl.");
+//				flowControl = true;
+//				ackNumber.set(0);
+//				failNumber.set(0);
+//			}
+//		}
+//		// 说明是pay的信息
+//		if (msgId instanceof MetaTuple) {
+//			MetaTuple tuple = (MetaTuple) values.get(1);
+//			tuple.incrFailTimes();
+//			// 重发次数大于MAX(默认5次)则抛弃
+//			if (tuple.getFailTimes() <= MetaTuple.MAX_FAIL_TIMES) {
+//				// 加入队列末尾，延迟一段时间
+//				try {
+//					emitQueue.put(tuple);
+//				} catch (InterruptedException e) {
+//					logger.info(RaceConfig.LogTracker + "ZY spout pay wait for re-emit interrupt:" + e.getMessage(), e);
+//				}
+//				// try {
+//				// tuple.waitForEmit();
+//				// } catch (InterruptedException e) {
+//				// logger.info("ZY spout pay wait for re-emit interrupt:" +
+//				// e.getMessage(), e);
+//				// }
+//				// spoutCollector.emit(values, msgId);
+//			} else {
+//				logger.warn(RaceConfig.LogTracker + "ZY spout payMessage failed more than 5 times,payMsg:"
+//						+ tuple.getMessage());
+//			}
+//		} else {
+//			// 订单信息直接重新发送
+//			spoutCollector.emit(values, msgId);
+//		}
 	}
 
 	@Override
 	public void ack(Object msgId, List<Object> values) {
 		// 在flowControl下，如果ack数量累积到10w(10s预估的偏移量)并且ack和fail比值大于20，则取消flowControl
-		if (flowControl) {
-			int ackNum = ackNumber.incrementAndGet();
-			int failNum = failNumber.get();
-			if (ackNum >= RaceConfig.ThresholdACK && failNum != 0 && ((ackNum / failNum) >= 20)) {
-				logger.info(RaceConfig.LogTracker + "ZY spout disables flowControl.");
-				flowControl = false;
-				ackNumber.set(0);
-				failNumber.set(0);
-			}
-		}
+//		if (flowControl) {
+//			int ackNum = ackNumber.incrementAndGet();
+//			int failNum = failNumber.get();
+//			if (ackNum >= RaceConfig.ThresholdACK && failNum != 0 && ((ackNum / failNum) >= 20)) {
+//				logger.info(RaceConfig.LogTracker + "ZY spout disables flowControl.");
+//				flowControl = false;
+//				ackNumber.set(0);
+//				failNumber.set(0);
+//			}
+//		}
 
 	}
 

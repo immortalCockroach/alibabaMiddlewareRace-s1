@@ -57,12 +57,12 @@ public class CalAndPersistBolt implements IRichBolt {
 
 		this.collector = collector;
 
-		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
-		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
+//		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
+//		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
 		wpRatioMap = new ConcurrentHashMap<Long, WPRatio>();
 
-		taobaoMapLock = new ReentrantLock();
-		tmallLock = new ReentrantLock();
+//		taobaoMapLock = new ReentrantLock();
+//		tmallLock = new ReentrantLock();
 		ratioLock = new ReentrantLock();
 
 		writeCount = 0;
@@ -87,8 +87,8 @@ public class CalAndPersistBolt implements IRichBolt {
 
 			@Override
 			public void run() {
-				writeTaobao();
-				writeTmall();
+//				writeTaobao();
+//				writeTmall();
 				writeRatio();
 				writeCount++;
 
@@ -99,13 +99,13 @@ public class CalAndPersistBolt implements IRichBolt {
 	@Override
 	public void execute(Tuple input) {
 		// TODO Auto-generated method stub
-		String identifier = input.getString(0);
+		//String identifier = input.getString(0);
 		PaymentMessage payMessage = (PaymentMessage) input.getValue(1);
 
-		if (payCount.incrementAndGet() > 100000) {
-			logger.info(RaceConfig.LogTracker + "ZY CalBolt get more than 10w");
-			payCount.set(0);
-		}
+//		if (payCount.incrementAndGet() > 100000) {
+//			logger.info(RaceConfig.LogTracker + "ZY CalBolt get more than 10w");
+//			payCount.set(0);
+//		}
 
 		Long timeKey = (payMessage.getCreateTime() / 1000 / 60) * 60;
 		double amount = payMessage.getPayAmount();
@@ -146,62 +146,62 @@ public class CalAndPersistBolt implements IRichBolt {
 			}
 		}
 
-		if (identifier.equals(RaceConfig.TaobaoIdentifier)) {
-			// 10位的时间戳，此处不转成String 防止字符串拼接的开销
-
-			// 当map中不存在key的时候 需要lock住map,否则多线程的put结果可能会覆盖
-			if (!taobaoOrderTranMap.contains(timeKey)) {
-				taobaoMapLock.lock();
-
-				// 防止2个线程同时得到containKey为false时的冲突
-				boolean add = true;
-				if (taobaoOrderTranMap.containsKey(timeKey)) {
-					taobaoOrderTranMap.get(timeKey).incrValue(amount);
-					add = false;
-					logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add taobaoMap,timeKey:" + timeKey);
-				}
-				try {
-					if (add) {
-						OrderTranValue value = new OrderTranValue(amount);
-						taobaoOrderTranMap.put(timeKey, value);
-					}
-				} finally {
-					taobaoMapLock.unlock();
-				}
-
-			} else { // 这种情况下，由于更新字段是synchronized 所以不需要lock
-				taobaoOrderTranMap.get(timeKey).incrValue(amount);
-			}
-
-		} else {
-			if (identifier.equals(RaceConfig.TmallIdentifier)) {
-				// 同上
-				if (!tmallOrderTranMap.contains(timeKey)) {
-					tmallLock.lock();
-
-					boolean add = true;
-					if (tmallOrderTranMap.containsKey(timeKey)) {
-						tmallOrderTranMap.get(timeKey).incrValue(amount);
-						add = false;
-						logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add tmallMap:" + timeKey);
-					}
-					try {
-						if (add) {
-							OrderTranValue value = new OrderTranValue(amount);
-							tmallOrderTranMap.put(timeKey, value);
-						}
-					} finally {
-						tmallLock.unlock();
-					}
-
-				} else { // 同上
-					tmallOrderTranMap.get(timeKey).incrValue(amount);
-				}
-			} else {
-//				logger.error(RaceConfig.LogTracker + "CalBolt unrecognized Identifier:" + identifier + ",message:"
-//						+ payMessage);
-			}
-		}
+//		if (identifier.equals(RaceConfig.TaobaoIdentifier)) {
+//			// 10位的时间戳，此处不转成String 防止字符串拼接的开销
+//
+//			// 当map中不存在key的时候 需要lock住map,否则多线程的put结果可能会覆盖
+//			if (!taobaoOrderTranMap.contains(timeKey)) {
+//				taobaoMapLock.lock();
+//
+//				// 防止2个线程同时得到containKey为false时的冲突
+//				boolean add = true;
+//				if (taobaoOrderTranMap.containsKey(timeKey)) {
+//					taobaoOrderTranMap.get(timeKey).incrValue(amount);
+//					add = false;
+//					logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add taobaoMap,timeKey:" + timeKey);
+//				}
+//				try {
+//					if (add) {
+//						OrderTranValue value = new OrderTranValue(amount);
+//						taobaoOrderTranMap.put(timeKey, value);
+//					}
+//				} finally {
+//					taobaoMapLock.unlock();
+//				}
+//
+//			} else { // 这种情况下，由于更新字段是synchronized 所以不需要lock
+//				taobaoOrderTranMap.get(timeKey).incrValue(amount);
+//			}
+//
+//		} else {
+//			if (identifier.equals(RaceConfig.TmallIdentifier)) {
+//				// 同上
+//				if (!tmallOrderTranMap.contains(timeKey)) {
+//					tmallLock.lock();
+//
+//					boolean add = true;
+//					if (tmallOrderTranMap.containsKey(timeKey)) {
+//						tmallOrderTranMap.get(timeKey).incrValue(amount);
+//						add = false;
+//						logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add tmallMap:" + timeKey);
+//					}
+//					try {
+//						if (add) {
+//							OrderTranValue value = new OrderTranValue(amount);
+//							tmallOrderTranMap.put(timeKey, value);
+//						}
+//					} finally {
+//						tmallLock.unlock();
+//					}
+//
+//				} else { // 同上
+//					tmallOrderTranMap.get(timeKey).incrValue(amount);
+//				}
+//			} else {
+////				logger.error(RaceConfig.LogTracker + "CalBolt unrecognized Identifier:" + identifier + ",message:"
+////						+ payMessage);
+//			}
+//		}
 
 		collector.ack(input);
 	}

@@ -37,21 +37,21 @@ public class ProcessBolt implements IRichBolt {
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		// TODO Auto-generated method stub
 		this.collector = collector;
-		if (RaceDataStorage.taobaoOrderMap == null) {
-			RaceDataStorage.taobaoOrderMap = new ConcurrentHashMap<Long, OrderMessage>(
-					RaceConfig.processMapEntryArraySize, 0.75f, RaceConfig.processOrderMapInitSegments);
-		}
-		if (RaceDataStorage.tmallOrderMap == null) {
-			RaceDataStorage.tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(
-					RaceConfig.processMapEntryArraySize, 0.75f, RaceConfig.processOrderMapInitSegments);
-		}
-
-		if (RaceDataStorage.tmallCount == null) {
-			RaceDataStorage.tmallCount = new AtomicInteger(0);
-		}
-		if (RaceDataStorage.taobaoCount == null) {
-			RaceDataStorage.taobaoCount = new AtomicInteger(0);
-		}
+//		if (RaceDataStorage.taobaoOrderMap == null) {
+//			RaceDataStorage.taobaoOrderMap = new ConcurrentHashMap<Long, OrderMessage>(
+//					RaceConfig.processMapEntryArraySize, 0.75f, RaceConfig.processOrderMapInitSegments);
+//		}
+//		if (RaceDataStorage.tmallOrderMap == null) {
+//			RaceDataStorage.tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(
+//					RaceConfig.processMapEntryArraySize, 0.75f, RaceConfig.processOrderMapInitSegments);
+//		}
+//
+//		if (RaceDataStorage.tmallCount == null) {
+//			RaceDataStorage.tmallCount = new AtomicInteger(0);
+//		}
+//		if (RaceDataStorage.taobaoCount == null) {
+//			RaceDataStorage.taobaoCount = new AtomicInteger(0);
+//		}
 		// Thread traverseThread = new Thread(new Runnable() {
 		//
 		// @Override
@@ -115,8 +115,8 @@ public class ProcessBolt implements IRichBolt {
 		String topicIdentifier = input.getString(0);
 		Object message = input.getValue(1);
 
-		logger.info(RaceConfig.LogTracker + "ZY processBolt receive message,id:" + topicIdentifier + ",message:"
-				+ message.toString());
+//		logger.info(RaceConfig.LogTracker + "ZY processBolt receive message,id:" + topicIdentifier + ",message:"
+//				+ message.toString());
 		// if (message == null) {
 		// logger.error(RaceConfig.LogTracker + "ZY processBolt message is
 		// null:" + topicIdentifier);
@@ -127,37 +127,37 @@ public class ProcessBolt implements IRichBolt {
 		// 然后超时fail堆积产生flowControl效果
 		case RaceConfig.PayIdentifier:
 			PaymentMessage payMessage = ((MetaTuple) message).getMessage();
-			Long orderId = payMessage.getOrderId();
-			double price = payMessage.getPayAmount();
-			OrderMessage orderMessage = RaceDataStorage.taobaoOrderMap.get(orderId);
-			// taobao订单
-			if (orderMessage != null) {
-				// 将reducePrice和isZero方法设置为synchronized 防止同一个对象的竞争条件
-				orderMessage.reducePrice(price);
-				if (orderMessage.isZero()) {
-					RaceDataStorage.taobaoOrderMap.remove(orderId);
-				}
-				// taobao付款消息
-				logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve taobaoOrder,identifier:" + topicIdentifier
-						+ ",key" + orderId);
-				sendMessage(input, RaceConfig.TaobaoIdentifier, payMessage);
-				collector.ack(input);
-			} else {
-				// Tmall订单
-				orderMessage = RaceDataStorage.tmallOrderMap.get(orderId);
-				if (orderMessage != null) {
-					// 同上
-					orderMessage.reducePrice(price);
-					if (orderMessage.isZero()) {
-						RaceDataStorage.tmallOrderMap.remove(orderId);
-					}
-
-					logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve tmallOrder,identifier:"
-							+ topicIdentifier + ",key" + orderId);
-					// tmall付款消息
-					sendMessage(input, RaceConfig.TmallIdentifier, payMessage);
-					collector.ack(input);
-				} else {
+//			Long orderId = payMessage.getOrderId();
+//			double price = payMessage.getPayAmount();
+//			OrderMessage orderMessage = RaceDataStorage.taobaoOrderMap.get(orderId);
+//			// taobao订单
+//			if (orderMessage != null) {
+//				// 将reducePrice和isZero方法设置为synchronized 防止同一个对象的竞争条件
+//				orderMessage.reducePrice(price);
+//				if (orderMessage.isZero()) {
+//					RaceDataStorage.taobaoOrderMap.remove(orderId);
+//				}
+//				// taobao付款消息
+//				logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve taobaoOrder,identifier:" + topicIdentifier
+//						+ ",key" + orderId);
+//				sendMessage(input, RaceConfig.TaobaoIdentifier, payMessage);
+//				collector.ack(input);
+//			} else {
+//				// Tmall订单
+//				orderMessage = RaceDataStorage.tmallOrderMap.get(orderId);
+//				if (orderMessage != null) {
+//					// 同上
+//					orderMessage.reducePrice(price);
+//					if (orderMessage.isZero()) {
+//						RaceDataStorage.tmallOrderMap.remove(orderId);
+//					}
+//
+//					logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve tmallOrder,identifier:"
+//							+ topicIdentifier + ",key" + orderId);
+//					// tmall付款消息
+//					sendMessage(input, RaceConfig.TmallIdentifier, payMessage);
+//					collector.ack(input);
+//				} else {
 					// 没找到直接fail
 //					logger.warn(RaceConfig.LogTracker + "ZY processBoltpayMessage not found:" + orderId + ",tmallCount:"
 //							+ RaceDataStorage.tmallCount.intValue() + ",taobaoCount:"
@@ -166,37 +166,37 @@ public class ProcessBolt implements IRichBolt {
 //					collector.fail(input);
 
 					// 此时当failtimes为5的时候 直接用于计算比值,identifier为payIdentifier
-					if (((MetaTuple) message).getFailTimes() == MetaTuple.MAX_FAIL_TIMES) {
+//					if (((MetaTuple) message).getFailTimes() == MetaTuple.MAX_FAIL_TIMES) {
 						sendMessage(input, RaceConfig.PayIdentifier, payMessage);
 						collector.ack(input);
-					} else {
-						collector.fail(input);
-					}
-				}
-			}
+//					} else {
+//						collector.fail(input);
+//					}
+//				}
+//			}
 
 			break;
 		case RaceConfig.TmallIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt gettmallOrder,identifier:" + topicIdentifier
-					+ ",message:" + (OrderMessage) message + ",count:" + RaceDataStorage.tmallCount.intValue());
-			RaceDataStorage.tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
-			RaceDataStorage.tmallCount.incrementAndGet();
-			if (RaceDataStorage.tmallCount.intValue() % 100000 == 0) {
-				logger.info(
-						RaceConfig.LogTracker + "ZY processBolt, tmallMapSize:" + RaceDataStorage.tmallOrderMap.size());
-			}
-			collector.ack(input);
+//			logger.info(RaceConfig.LogTracker + "ZY processBolt gettmallOrder,identifier:" + topicIdentifier
+//					+ ",message:" + (OrderMessage) message + ",count:" + RaceDataStorage.tmallCount.intValue());
+//			RaceDataStorage.tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
+//			RaceDataStorage.tmallCount.incrementAndGet();
+//			if (RaceDataStorage.tmallCount.intValue() % 100000 == 0) {
+//				logger.info(
+//						RaceConfig.LogTracker + "ZY processBolt, tmallMapSize:" + RaceDataStorage.tmallOrderMap.size());
+//			}
+//			collector.ack(input);
 			break;
 		case RaceConfig.TaobaoIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt gettaobaoOrder,identifier:" + topicIdentifier
-					+ ",message" + (OrderMessage) message + ",count:" + RaceDataStorage.taobaoCount.intValue());
-			RaceDataStorage.taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
-			RaceDataStorage.taobaoCount.incrementAndGet();
-			if (RaceDataStorage.taobaoCount.intValue() % 100000 == 0) {
-				logger.info(RaceConfig.LogTracker + "ZY processBolt, taobaoMapSize:"
-						+ RaceDataStorage.taobaoOrderMap.size());
-			}
-			collector.ack(input);
+//			logger.info(RaceConfig.LogTracker + "ZY processBolt gettaobaoOrder,identifier:" + topicIdentifier
+//					+ ",message" + (OrderMessage) message + ",count:" + RaceDataStorage.taobaoCount.intValue());
+//			RaceDataStorage.taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
+//			RaceDataStorage.taobaoCount.incrementAndGet();
+//			if (RaceDataStorage.taobaoCount.intValue() % 100000 == 0) {
+//				logger.info(RaceConfig.LogTracker + "ZY processBolt, taobaoMapSize:"
+//						+ RaceDataStorage.taobaoOrderMap.size());
+//			}
+//			collector.ack(input);
 			break;
 		default:
 			logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier
