@@ -151,7 +151,7 @@ public class ProcessBolt implements IRichBolt {
 							+ tmallCount.intValue() + ",taobaoCount:" + taobaoCount.intValue());
 
 					collector.fail(input);
-					
+
 					// 此时当failtimes为5的时候 直接用于计算比值,identifier为payIdentifier
 					// if (((MetaTuple) message).getFailTimes() ==
 					// MetaTuple.MAX_FAIL_TIMES) {
@@ -165,17 +165,23 @@ public class ProcessBolt implements IRichBolt {
 
 			break;
 		case RaceConfig.TmallIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt gettmallOrder,identifier:" + topicIdentifier + ",message:"
-					+ (OrderMessage) message);
+			logger.info(RaceConfig.LogTracker + "ZY processBolt gettmallOrder,identifier:" + topicIdentifier
+					+ ",message:" + (OrderMessage) message + ",count:" + tmallCount.intValue());
 			tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			tmallCount.incrementAndGet();
+			if (tmallCount.intValue() % 100000 == 0) {
+				logger.info(RaceConfig.LogTracker + "ZY processBolt, tmallMapSize:" + tmallOrderMap.size());
+			}
 			collector.ack(input);
 			break;
 		case RaceConfig.TaobaoIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt gettaobaoOrder,identifier:" + topicIdentifier + ",message"
-					+ (OrderMessage) message);
+			logger.info(RaceConfig.LogTracker + "ZY processBolt gettaobaoOrder,identifier:" + topicIdentifier
+					+ ",message" + (OrderMessage) message + ",count:" + taobaoCount.intValue());
 			taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			taobaoCount.incrementAndGet();
+			if (taobaoCount.intValue() % 100000 == 0) {
+				logger.info(RaceConfig.LogTracker + "ZY processBolt, taobaoMapSize:" + taobaoOrderMap.size());
+			}
 			collector.ack(input);
 			break;
 		default:
