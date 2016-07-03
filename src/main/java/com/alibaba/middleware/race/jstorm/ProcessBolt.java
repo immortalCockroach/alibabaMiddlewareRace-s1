@@ -106,10 +106,12 @@ public class ProcessBolt implements IRichBolt {
 		String topicIdentifier = input.getString(0);
 		Object message = input.getValue(1);
 
-		if (message == null) {
-			logger.error(RaceConfig.LogTracker + "ZY processBolt message is null:" + topicIdentifier);
-			return;
-		}
+		logger.info(RaceConfig.LogTracker + "ZY processBolt receive message,id:" + topicIdentifier + ",message:"
+				+ message.toString());
+//		if (message == null) {
+//			logger.error(RaceConfig.LogTracker + "ZY processBolt message is null:" + topicIdentifier);
+//			return;
+//		}
 		switch (topicIdentifier) {
 		// 当处理pay订单的时候，如果此时pay订单找不到taobao或者tmall的orderId，则默认为fail(虽然确实是成功了)
 		// 然后超时fail堆积产生flowControl效果
