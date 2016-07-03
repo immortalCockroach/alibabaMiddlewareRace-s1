@@ -3,6 +3,7 @@ package com.alibaba.middleware.race.jstorm;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,15 +29,20 @@ public class ProcessBolt implements IRichBolt {
 	private ConcurrentHashMap<Long, OrderMessage> tmallOrderMap;
 	private OutputCollector collector;
 
+	private AtomicInteger tmallCount;
+	private AtomicInteger taobaoCount;
+
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		// TODO Auto-generated method stub
 		this.collector = collector;
-		taobaoOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processOrderMapInitSegments, 0.75f,
-				RaceConfig.processMapEntryArraySize);
-		tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processOrderMapInitSegments, 0.75f,
-				RaceConfig.processMapEntryArraySize);
+		taobaoOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processMapEntryArraySize, 0.75f,
+				RaceConfig.processOrderMapInitSegments);
+		tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processMapEntryArraySize, 0.75f,
+				RaceConfig.processOrderMapInitSegments);
 
+		tmallCount = new AtomicInteger(0);
+		taobaoCount = new AtomicInteger(0);
 		// Thread traverseThread = new Thread(new Runnable() {
 		//
 		// @Override
@@ -141,32 +147,35 @@ public class ProcessBolt implements IRichBolt {
 					collector.ack(input);
 				} else {
 					// 没找到直接fail
-					// logger.warn(RaceConfig.LogTracker + "ZY processBolt
-					// payMessage not found:" + orderId);
+					logger.warn(RaceConfig.LogTracker + "ZY processBoltpayMessage not found:" + orderId + ",tmallCount:"
+							+ tmallCount.intValue() + ",taobaoCount:" + taobaoCount.intValue());
+
+					collector.fail(input);
 					
-					// 此时当failtimes为5的时候  直接用于计算比值,identifier为payIdentifier
-					if (((MetaTuple) message).getFailTimes() == MetaTuple.MAX_FAIL_TIMES) {
-						sendMessage(input, RaceConfig.PayIdentifier, payMessage);
-						collector.ack(input);
-					} else {
-						collector.fail(input);
-					}
+					// 此时当failtimes为5的时候 直接用于计算比值,identifier为payIdentifier
+					// if (((MetaTuple) message).getFailTimes() ==
+					// MetaTuple.MAX_FAIL_TIMES) {
+					// sendMessage(input, RaceConfig.PayIdentifier, payMessage);
+					// collector.ack(input);
+					// } else {
+					// collector.fail(input);
+					// }
 				}
 			}
 
 			break;
 		case RaceConfig.TmallIdentifier:
-			// logger.info(RaceConfig.LogTracker + "ZY processBolt get
-			// tmallOrder,identifier:" + topicIdentifier
-			// + ",key" + ((OrderMessage) message).getOrderId());
+			logger.info(RaceConfig.LogTracker + "ZY processBolt gettmallOrder,identifier:" + topicIdentifier + ",message:"
+					+ (OrderMessage) message);
 			tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
+			tmallCount.incrementAndGet();
 			collector.ack(input);
 			break;
 		case RaceConfig.TaobaoIdentifier:
-			// logger.info(RaceConfig.LogTracker + "ZY processBolt get
-			// taobaoOrder,identifier:" + topicIdentifier
-			// + ",key" + ((OrderMessage) message).getOrderId());
+			logger.info(RaceConfig.LogTracker + "ZY processBolt gettaobaoOrder,identifier:" + topicIdentifier + ",message"
+					+ (OrderMessage) message);
 			taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
+			taobaoCount.incrementAndGet();
 			collector.ack(input);
 			break;
 		default:
