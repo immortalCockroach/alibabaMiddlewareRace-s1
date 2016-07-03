@@ -198,8 +198,8 @@ public class CalAndPersistBolt implements IRichBolt {
 					tmallOrderTranMap.get(timeKey).incrValue(amount);
 				}
 			} else {
-				logger.error(RaceConfig.LogTracker + "CalBolt unrecognized Identifier:" + identifier + ",message:"
-						+ payMessage);
+//				logger.error(RaceConfig.LogTracker + "CalBolt unrecognized Identifier:" + identifier + ",message:"
+//						+ payMessage);
 			}
 		}
 

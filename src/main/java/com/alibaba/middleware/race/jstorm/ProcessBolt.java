@@ -143,7 +143,14 @@ public class ProcessBolt implements IRichBolt {
 					// 没找到直接fail
 					// logger.warn(RaceConfig.LogTracker + "ZY processBolt
 					// payMessage not found:" + orderId);
-					collector.fail(input);
+					
+					// 此时当failtimes为5的时候  直接用于计算比值,identifier为payIdentifier
+					if (((MetaTuple) message).getFailTimes() == MetaTuple.MAX_FAIL_TIMES) {
+						sendMessage(input, RaceConfig.PayIdentifier, payMessage);
+						collector.ack(input);
+					} else {
+						collector.fail(input);
+					}
 				}
 			}
 
