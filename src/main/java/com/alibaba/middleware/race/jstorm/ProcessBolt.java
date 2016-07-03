@@ -26,24 +26,24 @@ public class ProcessBolt implements IRichBolt {
 
 	private Logger logger = LoggerFactory.getLogger(ProcessBolt.class);
 
-//	private static ConcurrentHashMap<Long, OrderMessage> taobaoOrderMap;
-//	private static ConcurrentHashMap<Long, OrderMessage> tmallOrderMap;
+	// private static ConcurrentHashMap<Long, OrderMessage> taobaoOrderMap;
+	// private static ConcurrentHashMap<Long, OrderMessage> tmallOrderMap;
 	private OutputCollector collector;
 
-//	private static AtomicInteger tmallCount;
-//	private static AtomicInteger taobaoCount;
+	// private static AtomicInteger tmallCount;
+	// private static AtomicInteger taobaoCount;
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		// TODO Auto-generated method stub
 		this.collector = collector;
 		if (RaceDataStorage.taobaoOrderMap == null) {
-			RaceDataStorage.taobaoOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processMapEntryArraySize, 0.75f,
-					RaceConfig.processOrderMapInitSegments);
+			RaceDataStorage.taobaoOrderMap = new ConcurrentHashMap<Long, OrderMessage>(
+					RaceConfig.processMapEntryArraySize, 0.75f, RaceConfig.processOrderMapInitSegments);
 		}
 		if (RaceDataStorage.tmallOrderMap == null) {
-			RaceDataStorage.tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processMapEntryArraySize, 0.75f,
-					RaceConfig.processOrderMapInitSegments);
+			RaceDataStorage.tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(
+					RaceConfig.processMapEntryArraySize, 0.75f, RaceConfig.processOrderMapInitSegments);
 		}
 
 		if (RaceDataStorage.tmallCount == null) {
@@ -159,19 +159,19 @@ public class ProcessBolt implements IRichBolt {
 					collector.ack(input);
 				} else {
 					// 没找到直接fail
-					logger.warn(RaceConfig.LogTracker + "ZY processBoltpayMessage not found:" + orderId + ",tmallCount:"
-							+ RaceDataStorage.tmallCount.intValue() + ",taobaoCount:" + RaceDataStorage.taobaoCount.intValue());
-
-					collector.fail(input);
+//					logger.warn(RaceConfig.LogTracker + "ZY processBoltpayMessage not found:" + orderId + ",tmallCount:"
+//							+ RaceDataStorage.tmallCount.intValue() + ",taobaoCount:"
+//							+ RaceDataStorage.taobaoCount.intValue());
+//
+//					collector.fail(input);
 
 					// 此时当failtimes为5的时候 直接用于计算比值,identifier为payIdentifier
-					// if (((MetaTuple) message).getFailTimes() ==
-					// MetaTuple.MAX_FAIL_TIMES) {
-					// sendMessage(input, RaceConfig.PayIdentifier, payMessage);
-					// collector.ack(input);
-					// } else {
-					// collector.fail(input);
-					// }
+					if (((MetaTuple) message).getFailTimes() == MetaTuple.MAX_FAIL_TIMES) {
+						sendMessage(input, RaceConfig.PayIdentifier, payMessage);
+						collector.ack(input);
+					} else {
+						collector.fail(input);
+					}
 				}
 			}
 
@@ -182,7 +182,8 @@ public class ProcessBolt implements IRichBolt {
 			RaceDataStorage.tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			RaceDataStorage.tmallCount.incrementAndGet();
 			if (RaceDataStorage.tmallCount.intValue() % 100000 == 0) {
-				logger.info(RaceConfig.LogTracker + "ZY processBolt, tmallMapSize:" + RaceDataStorage.tmallOrderMap.size());
+				logger.info(
+						RaceConfig.LogTracker + "ZY processBolt, tmallMapSize:" + RaceDataStorage.tmallOrderMap.size());
 			}
 			collector.ack(input);
 			break;
@@ -192,7 +193,8 @@ public class ProcessBolt implements IRichBolt {
 			RaceDataStorage.taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
 			RaceDataStorage.taobaoCount.incrementAndGet();
 			if (RaceDataStorage.taobaoCount.intValue() % 100000 == 0) {
-				logger.info(RaceConfig.LogTracker + "ZY processBolt, taobaoMapSize:" + RaceDataStorage.taobaoOrderMap.size());
+				logger.info(RaceConfig.LogTracker + "ZY processBolt, taobaoMapSize:"
+						+ RaceDataStorage.taobaoOrderMap.size());
 			}
 			collector.ack(input);
 			break;
