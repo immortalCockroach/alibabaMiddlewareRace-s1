@@ -18,13 +18,12 @@ public class RaceTopology {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-
 		Config conf = new Config();
 
 		conf.setNumAckers(1);
 		conf.setNumWorkers(3);
 		int spout_Parallelism_hint = 2;
-		int process_Parallelism_hint = 3;
+		int process_Parallelism_hint = 1;
 		int cal_Parallelism_hint = 3;
 		conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 200000);
 
@@ -32,11 +31,11 @@ public class RaceTopology {
 
 		builder.setSpout("topicSpout", new TopicEmitSpout(), spout_Parallelism_hint).setNumTasks(4);
 
-		builder.setBolt("processBolt", new ProcessBolt(), process_Parallelism_hint)
-				.fieldsGrouping("topicSpout", new Fields(RaceConfig.Topic)).setNumTasks(6);
+		builder.setBolt("processBolt", new ProcessBolt(), process_Parallelism_hint).fieldsGrouping("topicSpout",
+				new Fields(RaceConfig.Topic));
 
 		builder.setBolt("CalBolt", new CalAndPersistBolt(), cal_Parallelism_hint)
-				.fieldsGrouping("processBolt", new Fields(RaceConfig.Topic)).setNumTasks(6);
+				.fieldsGrouping("processBolt", new Fields(RaceConfig.Topic)).setNumTasks(3);
 
 		String topologyName = RaceConfig.JstormTopologyName;
 
