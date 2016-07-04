@@ -24,9 +24,13 @@ public class ProcessBolt implements IRichBolt {
 
 	private Logger logger = LoggerFactory.getLogger(ProcessBolt.class);
 
+	// 如果这个ProcessBolt是单线程的话 可以考虑换成普通的HashMap
 	private ConcurrentHashMap<Long, OrderMessage> taobaoOrderMap;
 	private ConcurrentHashMap<Long, OrderMessage> tmallOrderMap;
 	private OutputCollector collector;
+
+	// private Lock taobaoMapLock;
+	// private Lock tmallMapLock;
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -37,59 +41,8 @@ public class ProcessBolt implements IRichBolt {
 		tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processOrderMapInitSegments, 0.75f,
 				RaceConfig.processMapEntryArraySize);
 
-		// Thread traverseThread = new Thread(new Runnable() {
-		//
-		// @Override
-		// public void run() {
-		// PaymentMessage payMessage = null;
-		// while (true) {
-		// try {
-		// payMessage = payCacheQueue.take();
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// logger.info("ZY bolt new thread take operation interupt:" +
-		// e.getMessage(), e);
-		// }
-		// if (payMessage == null) {
-		// logger.warn("ZY bolt new thread take operation get null");
-		// continue;
-		// } else {
-		// Long orderId = payMessage.getOrderId();
-		// double price = payMessage.getPayAmount();
-		// OrderMessage orderMessage = taobaoOrderMap.get(orderId);
-		// // taobao订单
-		// if (orderMessage != null) {
-		// orderMessage.reducePrice(price);
-		// if (orderMessage.isZero()) {
-		// taobaoOrderMap.remove(orderId);
-		// }
-		// sendMessage(input, "2", payMessage);
-		// } else {
-		// // Tmall订单
-		// orderMessage = tmallOrderMap.get(orderId);
-		// if (orderMessage != null) {
-		// orderMessage.reducePrice(price);
-		// if (orderMessage.isZero()) {
-		// tmallOrderMap.remove(orderId);
-		// }
-		// sendMessage(input, "2", payMessage);
-		// } else {
-		// // 没找到,再放进去
-		// logger.info("ZY payMessage:" + orderId);
-		// try {
-		// payCacheQueue.put(payMessage);
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// logger.info("ZY bolt new thread put operation interupt:" +
-		// e.getMessage(), e);
-		// }
-		// }
-		// }
-		// }
-		// }
-		// }
-		// });
-		// traverseThread.start();
+		// taobaoMapLock = new ReentrantLock();
+		// tmallMapLock = new ReentrantLock();
 
 		logger.info(RaceConfig.LogTracker + "ZY processBolt init finished.");
 	}
@@ -108,9 +61,17 @@ public class ProcessBolt implements IRichBolt {
 		// 当处理pay订单的时候，如果此时pay订单找不到taobao或者tmall的orderId，则默认为fail(虽然确实是成功了)
 		// 然后超时fail堆积产生flowControl效果
 		case RaceConfig.PayIdentifier:
-			PaymentMessage payMessage = ((MetaTuple) message).getMessage();
+			MetaTuple tuple = (MetaTuple) message;
+			PaymentMessage payMessage = tuple.getMessage();
 			Long orderId = payMessage.getOrderId();
 			double price = payMessage.getPayAmount();
+
+			// 如果这个订单还没有被发送用于计算ratio 则发送，防止重复计算的问题(这个消息不ack)
+			if (tuple.getIsSendForRatio() == false) {
+				tuple.setIsSendForRatio(true);
+				sendMessage(RaceConfig.PayIdentifier, payMessage);
+			}
+
 			OrderMessage orderMessage = taobaoOrderMap.get(orderId);
 			// taobao订单
 			if (orderMessage != null) {
@@ -141,33 +102,41 @@ public class ProcessBolt implements IRichBolt {
 					collector.ack(input);
 				} else {
 					// 没找到直接fail
-					// logger.warn(RaceConfig.LogTracker + "ZY processBolt
-					// payMessage not found:" + orderId);
-					
-					// 此时当failtimes为5的时候  直接用于计算比值,identifier为payIdentifier
-					if (((MetaTuple) message).getFailTimes() == MetaTuple.MAX_FAIL_TIMES) {
-						sendMessage(input, RaceConfig.PayIdentifier, payMessage);
-						collector.ack(input);
-					} else {
-						collector.fail(input);
-					}
+					logger.warn(RaceConfig.LogTracker + "ZY processBolt payMessage not found:" + orderId);
+					collector.fail(input);
 				}
 			}
 
 			break;
 		case RaceConfig.TmallIdentifier:
-			// logger.info(RaceConfig.LogTracker + "ZY processBolt get
-			// tmallOrder,identifier:" + topicIdentifier
-			// + ",key" + ((OrderMessage) message).getOrderId());
-			tmallOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
-			collector.ack(input);
+			logger.info(RaceConfig.LogTracker + "ZY processBolt get tmallOrder,identifier:" + topicIdentifier + ",key"
+					+ ((OrderMessage) message).getOrderId());
+
+			// 需要有消息的去重过程 此处考虑到完全相同的消息不太可能同时到来 所以没有用锁
+			OrderMessage tmallOrder = (OrderMessage) message;
+			if (!tmallOrderMap.containsKey(tmallOrder.getOrderId())) {
+				tmallOrderMap.put(tmallOrder.getOrderId(), tmallOrder);
+				collector.ack(input);
+			} else {
+				logger.warn(RaceConfig.LogTracker + "ZY processBolg get repeat tmallOder,identifier:"
+						+ tmallOrder.getOrderId());
+				collector.fail(input);
+			}
+
 			break;
 		case RaceConfig.TaobaoIdentifier:
-			// logger.info(RaceConfig.LogTracker + "ZY processBolt get
-			// taobaoOrder,identifier:" + topicIdentifier
-			// + ",key" + ((OrderMessage) message).getOrderId());
-			taobaoOrderMap.put(((OrderMessage) message).getOrderId(), (OrderMessage) message);
-			collector.ack(input);
+			logger.info(RaceConfig.LogTracker + "ZY processBolt get taobaoOrder,identifier:" + topicIdentifier + ",key"
+					+ ((OrderMessage) message).getOrderId());
+
+			OrderMessage taobaoOrder = (OrderMessage) message;
+			if (!taobaoOrderMap.containsKey(taobaoOrder.getOrderId())) {
+				tmallOrderMap.put(taobaoOrder.getOrderId(), taobaoOrder);
+				collector.ack(input);
+			} else {
+				logger.warn(RaceConfig.LogTracker + "ZY processBolg get repeat taobaoOrder,identifier:"
+						+ taobaoOrder.getOrderId());
+				collector.fail(input);
+			}
 			break;
 		default:
 			logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier
@@ -180,6 +149,11 @@ public class ProcessBolt implements IRichBolt {
 	private void sendMessage(Tuple tuple, String orderPaymentIdentifier, PaymentMessage payMessage) {
 		List<Object> values = new Values(orderPaymentIdentifier, payMessage);
 		collector.emit(tuple, values);
+	}
+
+	private void sendMessage(String orderPaymentIdentifier, PaymentMessage payMessage) {
+		List<Object> values = new Values(orderPaymentIdentifier, payMessage);
+		collector.emit(values);
 	}
 
 	@Override
