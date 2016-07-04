@@ -15,7 +15,8 @@ public class MetaTuple {
 	public static final int MAX_FAIL_TIMES = 5;
 	// private CountDownLatch latch;
 
-	
+	private boolean isSendForRatio;
+
 	// Kryo默认需要无参数构造函数
 	public MetaTuple() {
 
@@ -25,6 +26,14 @@ public class MetaTuple {
 		this.message = message;
 		this.failTimes = new AtomicInteger(0);
 		// latch = new CountDownLatch(1);
+	}
+
+	public boolean getIsSendForRatio() {
+		return this.isSendForRatio;
+	}
+
+	public void setIsSendForRatio(boolean value) {
+		this.isSendForRatio = value;
 	}
 
 	public PaymentMessage getMessage() {
