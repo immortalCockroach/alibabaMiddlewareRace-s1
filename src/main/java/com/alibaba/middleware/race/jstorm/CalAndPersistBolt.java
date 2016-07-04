@@ -54,12 +54,12 @@ public class CalAndPersistBolt implements IRichBolt {
 
 		this.collector = collector;
 
-		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
-		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
+//		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
+//		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
 		wpRatioMap = new ConcurrentHashMap<Long, WPRatio>();
 
-		taobaoMapLock = new ReentrantLock();
-		tmallLock = new ReentrantLock();
+//		taobaoMapLock = new ReentrantLock();
+//		tmallLock = new ReentrantLock();
 		ratioLock = new ReentrantLock();
 
 		writeCount = 0;
@@ -83,8 +83,8 @@ public class CalAndPersistBolt implements IRichBolt {
 
 			@Override
 			public void run() {
-				writeTaobao();
-				writeTmall();
+//				writeTaobao();
+//				writeTmall();
 				writeRatio();
 				writeCount++;
 
@@ -97,7 +97,7 @@ public class CalAndPersistBolt implements IRichBolt {
 		// TODO Auto-generated method stub
 		String identifier = input.getString(0);
 		PaymentMessage payMessage = (PaymentMessage) input.getValue(1);
-
+		
 		Long timeKey = (payMessage.getCreateTime() / 1000 / 60) * 60;
 		double amount = payMessage.getPayAmount();
 
@@ -199,6 +199,7 @@ public class CalAndPersistBolt implements IRichBolt {
 				// + payMessage);
 			}
 		}
+
 
 		
 	}

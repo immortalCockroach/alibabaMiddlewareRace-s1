@@ -3,11 +3,13 @@ package com.alibaba.middleware.race.jstorm;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceDataStorage;
 import com.alibaba.middleware.race.model.MetaTuple;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
@@ -29,8 +31,6 @@ public class ProcessBolt implements IRichBolt {
 	private ConcurrentHashMap<Long, OrderMessage> tmallOrderMap;
 	private OutputCollector collector;
 
-	// private Lock taobaoMapLock;
-	// private Lock tmallMapLock;
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -41,8 +41,6 @@ public class ProcessBolt implements IRichBolt {
 		tmallOrderMap = new ConcurrentHashMap<Long, OrderMessage>(RaceConfig.processOrderMapInitSegments, 0.75f,
 				RaceConfig.processMapEntryArraySize);
 
-		// taobaoMapLock = new ReentrantLock();
-		// tmallMapLock = new ReentrantLock();
 
 		logger.info(RaceConfig.LogTracker + "ZY processBolt init finished.");
 	}
@@ -52,11 +50,7 @@ public class ProcessBolt implements IRichBolt {
 		// TODO Auto-generated method stub
 		String topicIdentifier = input.getString(0);
 		Object message = input.getValue(1);
-
-		if (message == null) {
-			logger.error(RaceConfig.LogTracker + "ZY processBolt message is null:" + topicIdentifier);
-			return;
-		}
+		
 		switch (topicIdentifier) {
 		// 当处理pay订单的时候，如果此时pay订单找不到taobao或者tmall的orderId，则默认为fail(虽然确实是成功了)
 		// 然后超时fail堆积产生flowControl效果
@@ -137,6 +131,7 @@ public class ProcessBolt implements IRichBolt {
 						+ taobaoOrder.getOrderId());
 				collector.fail(input);
 			}
+
 			break;
 		default:
 			logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier

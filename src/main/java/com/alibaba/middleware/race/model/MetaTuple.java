@@ -22,6 +22,11 @@ public class MetaTuple {
 
 	}
 
+	@Override
+	public String toString() {
+		return "MetaTuplr:" + message.toString();
+	}
+
 	public MetaTuple(PaymentMessage message) {
 		this.message = message;
 		this.failTimes = new AtomicInteger(0);
