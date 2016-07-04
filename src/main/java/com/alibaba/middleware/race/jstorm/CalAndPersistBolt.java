@@ -9,7 +9,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -49,8 +48,6 @@ public class CalAndPersistBolt implements IRichBolt {
 
 	private OutputCollector collector;
 
-	private AtomicInteger payCount;
-
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		// TODO Auto-generated method stub
@@ -66,7 +63,6 @@ public class CalAndPersistBolt implements IRichBolt {
 		ratioLock = new ReentrantLock();
 
 		writeCount = 0;
-		payCount = new AtomicInteger(0);
 
 		List<String> confServers = new ArrayList<String>();
 		confServers.add(RaceConfig.TairConfigServer);
@@ -102,51 +98,48 @@ public class CalAndPersistBolt implements IRichBolt {
 		String identifier = input.getString(0);
 		PaymentMessage payMessage = (PaymentMessage) input.getValue(1);
 
-		if (payCount.incrementAndGet() > 100000) {
-			logger.info(RaceConfig.LogTracker + "ZY CalBolt get more than 10w");
-			payCount.set(0);
-		}
-
 		Long timeKey = (payMessage.getCreateTime() / 1000 / 60) * 60;
 		double amount = payMessage.getPayAmount();
-		if (!wpRatioMap.containsKey(timeKey)) {
-			ratioLock.lock();
 
-			boolean add = true;
-			if (wpRatioMap.containsKey(timeKey)) {
+		// pay的话说明用于计算ratio 而且不ack
+		if (identifier.equals(RaceConfig.PayIdentifier)) {
+			if (!wpRatioMap.containsKey(timeKey)) {
+				ratioLock.lock();
+
+				boolean add = true;
+				if (wpRatioMap.containsKey(timeKey)) {
+					WPRatio ratio = wpRatioMap.get(timeKey);
+					if (payMessage.getPayPlatform() == 0) {
+						ratio.incrPcValue(amount);
+					} else {
+						ratio.incrWirelessValue(amount);
+					}
+					add = false;
+					logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add ratioMap,timeKey:" + timeKey);
+				}
+				try {
+					if (add) {
+						WPRatio ratio = new WPRatio();
+						// pc
+						if (payMessage.getPayPlatform() == 0) {
+							ratio.incrPcValue(amount);
+						} else {
+							ratio.incrWirelessValue(amount);
+						}
+						wpRatioMap.put(timeKey, ratio);
+					}
+				} finally {
+					ratioLock.unlock();
+				}
+			} else {
 				WPRatio ratio = wpRatioMap.get(timeKey);
 				if (payMessage.getPayPlatform() == 0) {
 					ratio.incrPcValue(amount);
 				} else {
 					ratio.incrWirelessValue(amount);
 				}
-				add = false;
-				logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add ratioMap,timeKey:" + timeKey);
 			}
-			try {
-				if (add) {
-					WPRatio ratio = new WPRatio();
-					// pc
-					if (payMessage.getPayPlatform() == 0) {
-						ratio.incrPcValue(amount);
-					} else {
-						ratio.incrWirelessValue(amount);
-					}
-					wpRatioMap.put(timeKey, ratio);
-				}
-			} finally {
-				ratioLock.unlock();
-			}
-		} else {
-			WPRatio ratio = wpRatioMap.get(timeKey);
-			if (payMessage.getPayPlatform() == 0) {
-				ratio.incrPcValue(amount);
-			} else {
-				ratio.incrWirelessValue(amount);
-			}
-		}
-
-		if (identifier.equals(RaceConfig.TaobaoIdentifier)) {
+		} else if (identifier.equals(RaceConfig.TaobaoIdentifier)) {
 			// 10位的时间戳，此处不转成String 防止字符串拼接的开销
 
 			// 当map中不存在key的时候 需要lock住map,否则多线程的put结果可能会覆盖
@@ -172,7 +165,8 @@ public class CalAndPersistBolt implements IRichBolt {
 			} else { // 这种情况下，由于更新字段是synchronized 所以不需要lock
 				taobaoOrderTranMap.get(timeKey).incrValue(amount);
 			}
-
+			// taobao和tmall的paymessage需要ack
+			collector.ack(input);
 		} else {
 			if (identifier.equals(RaceConfig.TmallIdentifier)) {
 				// 同上
@@ -197,13 +191,16 @@ public class CalAndPersistBolt implements IRichBolt {
 				} else { // 同上
 					tmallOrderTranMap.get(timeKey).incrValue(amount);
 				}
+				// taobao和tmall的paymessage需要ack
+				collector.ack(input);
 			} else {
-//				logger.error(RaceConfig.LogTracker + "CalBolt unrecognized Identifier:" + identifier + ",message:"
-//						+ payMessage);
+				// logger.error(RaceConfig.LogTracker + "CalBolt unrecognized
+				// Identifier:" + identifier + ",message:"
+				// + payMessage);
 			}
 		}
 
-		collector.ack(input);
+		
 	}
 
 	private static double round2(double value) {
