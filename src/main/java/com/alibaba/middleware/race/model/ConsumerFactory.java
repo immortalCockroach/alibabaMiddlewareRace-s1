@@ -20,9 +20,9 @@ public class ConsumerFactory {
 		pushConsumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
 		pushConsumer.subscribe(RaceConfig.MqTmallTradeTopic, "*");
 
-		pushConsumer.setConsumeMessageBatchMaxSize(16);
+		pushConsumer.setConsumeMessageBatchMaxSize(128);
 		pushConsumer.setPullBatchSize(64);
-		
+		pushConsumer.setConsumeThreadMin(18);
 		pushConsumer.registerMessageListener(listener);
 		pushConsumer.start();
 		
