@@ -54,12 +54,12 @@ public class CalAndPersistBolt implements IRichBolt {
 
 		this.collector = collector;
 
-//		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
-//		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
+		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
+		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
 		wpRatioMap = new ConcurrentHashMap<Long, WPRatio>();
 
-//		taobaoMapLock = new ReentrantLock();
-//		tmallLock = new ReentrantLock();
+		taobaoMapLock = new ReentrantLock();
+		tmallLock = new ReentrantLock();
 		ratioLock = new ReentrantLock();
 
 		writeCount = 0;
@@ -83,8 +83,8 @@ public class CalAndPersistBolt implements IRichBolt {
 
 			@Override
 			public void run() {
-//				writeTaobao();
-//				writeTmall();
+				writeTaobao();
+				writeTmall();
 				writeRatio();
 				writeCount++;
 
