@@ -3,6 +3,7 @@ package com.alibaba.middleware.race.jstorm;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -39,6 +40,10 @@ public class CalAndPersistBolt implements IRichBolt {
 	private ConcurrentHashMap<Long, OrderTranValue> tmallOrderTranMap;
 
 	private ConcurrentHashMap<Long, WPRatio> wpRatioMap;
+	
+	private HashMap<Long,Double> lastTaobaoMap;
+	private HashMap<Long,Double> lastTmallMap;
+	private HashMap<Long,Double> lastRatioMap;
 
 	private Lock taobaoMapLock;
 	private Lock tmallLock;
@@ -57,6 +62,10 @@ public class CalAndPersistBolt implements IRichBolt {
 		taobaoOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
 		tmallOrderTranMap = new ConcurrentHashMap<Long, OrderTranValue>();
 		wpRatioMap = new ConcurrentHashMap<Long, WPRatio>();
+		
+		lastTaobaoMap = new HashMap<Long,Double>();
+		lastTmallMap = new HashMap<Long,Double>();
+		lastRatioMap = new HashMap<Long,Double>();
 
 		taobaoMapLock = new ReentrantLock();
 		tmallLock = new ReentrantLock();
@@ -77,7 +86,7 @@ public class CalAndPersistBolt implements IRichBolt {
 
 		logger.info(RaceConfig.LogTracker + "ZY CalBolt init finished.");
 
-		// 定时任务 45s开始 每60s间隔执行一次
+		// 定时任务 30s开始 每30s间隔执行一次
 		Timer t = new Timer();
 		t.schedule(new TimerTask() {
 
@@ -89,7 +98,7 @@ public class CalAndPersistBolt implements IRichBolt {
 				writeCount++;
 
 			}
-		}, 40 * 1000, 60 * 1000);
+		}, 30 * 1000, 30 * 1000);
 	}
 
 	@Override
@@ -217,15 +226,26 @@ public class CalAndPersistBolt implements IRichBolt {
 	private void writeTaobao() {
 		for (Map.Entry<Long, OrderTranValue> entry : taobaoOrderTranMap.entrySet()) {
 			// taobao的不用保留2位小数
-			ResultCode code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexTaobao + entry.getKey(),
-					entry.getValue().getValue());
-			if (!code.isSuccess()) {
-//				logger.error(RaceConfig.LogTracker + "ZY CalBolt put taobao error,code" + code.getCode() + ",message:"
-//						+ code.getMessage() + ",key:" + entry.getKey());
+			
+			Long timeKey = entry.getKey();
+			double value = entry.getValue().getValue();
+			// 和上次基本没差
+			if (lastTaobaoMap.containsKey(timeKey) && Math.abs(lastTaobaoMap.get(timeKey) - value) < 0.005) {
+				continue;
 			} else {
-//				logger.info(RaceConfig.LogTracker + "ZY CalBolt put taobao success,key:" + entry.getKey() + ",value:"
-//						+ entry.getValue().getValue());
+				lastTaobaoMap.put(timeKey, value);
+				tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexTaobao + timeKey,
+						value);
+//				if (!code.isSuccess()) {
+////					logger.error(RaceConfig.LogTracker + "ZY CalBolt put taobao error,code" + code.getCode() + ",message:"
+////							+ code.getMessage() + ",key:" + entry.getKey());
+//				} else {
+////					logger.info(RaceConfig.LogTracker + "ZY CalBolt put taobao success,key:" + entry.getKey() + ",value:"
+////							+ entry.getValue().getValue());
+//				}
 			}
+			
+
 		}
 		//logger.info(RaceConfig.LogTracker + "ZY CalBolt put taobao time:" + writeCount);
 	}
@@ -233,14 +253,25 @@ public class CalAndPersistBolt implements IRichBolt {
 	private void writeTmall() {
 		for (Map.Entry<Long, OrderTranValue> entry : tmallOrderTranMap.entrySet()) {
 			// tmall的不用保留2位小数
-			ResultCode code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexTmall + entry.getKey(),
-					entry.getValue().getValue());
-			if (!code.isSuccess()) {
-//				logger.error(RaceConfig.LogTracker + "ZY CalBolt put tmall error,code" + code.getCode() + ",message:"
-//						+ code.getMessage() + ",data:" + entry.getKey());
+			
+			Long timeKey = entry.getKey();
+			double value = entry.getValue().getValue();
+			// 和上次基本没差
+			if (lastTmallMap.containsKey(timeKey) && Math.abs(lastTmallMap.get(timeKey) - value) < 0.005) {
+				continue;
 			} else {
-//				logger.info(RaceConfig.LogTracker + "ZY CalBolt put tmall success,key:" + entry.getKey() + ",value:"
-//						+ entry.getValue().getValue());
+				lastTmallMap.put(timeKey, value);
+				tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexTmall + timeKey,
+						value);
+//				if (!code.isSuccess()) {
+//					// logger.error(RaceConfig.LogTracker + "ZY CalBolt put
+//					// tmall error,code" + code.getCode() + ",message:"
+//					// + code.getMessage() + ",data:" + entry.getKey());
+//				} else {
+//					// logger.info(RaceConfig.LogTracker + "ZY CalBolt put tmall
+//					// success,key:" + entry.getKey() + ",value:"
+//					// + entry.getValue().getValue());
+//				}
 			}
 		}
 		//logger.info(RaceConfig.LogTracker + "ZY CalBolt put tmall time:" + writeCount);
@@ -266,24 +297,40 @@ public class CalAndPersistBolt implements IRichBolt {
 			pcAddi = pcValue;
 			wirelessAddi = wireLessValue;
 
-			ResultCode code;
+//			ResultCode code;
+			
+			Long timeKey = mapping.getKey();
+			double value = 0f;
+			if (Math.abs(pcValue) < 0.0001) {
+				value = wireLessValue;
+			} else {
+				value = round2(wireLessValue / pcValue);
+			}
+			
+			if (lastRatioMap.containsKey(timeKey) && Math.abs(lastRatioMap.get(timeKey) - value) < 0.005) {
+				continue;
+			} else {
+				lastRatioMap.put(timeKey, value);
+				tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + timeKey,
+						value);
+			}
 
 			// ratio需要保留2位小数,顺便防止PC值为接近0的情况(虽然这个基本没可能)
-			if (Math.abs(pcValue) < 0.0001) {
-				code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + mapping.getKey(),
-						round2(wireLessValue));
-			} else {
-				code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + mapping.getKey(),
-						round2(wireLessValue / pcValue));
-			}
+//			if (Math.abs(pcValue) < 0.0001) {
+//				
+//			} else {
+//				lastRatioMap.put(timeKey, value);
+//				code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexRatio + timeKey,
+//						round2(wireLessValue / pcValue));
+//			}
 
-			if (!code.isSuccess()) {
-//				logger.error(RaceConfig.LogTracker + "ZY CalBolt put ratio error,code" + code.getCode() + ",message:"
-//						+ code.getMessage() + ",data:" + mapping.getKey());
-			} else {
-//				logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio success,key:" + mapping.getKey() + ",value:"
-//						+ wireLessValue + "/" + pcValue);
-			}
+//			if (!code.isSuccess()) {
+////				logger.error(RaceConfig.LogTracker + "ZY CalBolt put ratio error,code" + code.getCode() + ",message:"
+////						+ code.getMessage() + ",data:" + mapping.getKey());
+//			} else {
+////				logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio success,key:" + mapping.getKey() + ",value:"
+////						+ wireLessValue + "/" + pcValue);
+//			}
 		}
 		logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio time:" + writeCount);
 	}
