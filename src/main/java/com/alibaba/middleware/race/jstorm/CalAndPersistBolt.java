@@ -102,7 +102,7 @@ public class CalAndPersistBolt implements IRichBolt {
 //		logger.info(
 //				RaceConfig.LogTracker + "ZY calbolt get payment,identifier:" + identifier + ",message:" + payMessage);
 //		}
-		Long timeKey = payMessage.getCreateTime();
+		Long timeKey = (payMessage.getCreateTime() / 1000 /60) * 60;
 		double amount = payMessage.getPayAmount();
 
 		// pay的话说明用于计算ratio 而且不ack
