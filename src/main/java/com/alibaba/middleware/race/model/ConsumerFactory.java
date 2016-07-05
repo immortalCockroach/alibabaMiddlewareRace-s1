@@ -4,7 +4,6 @@ import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import com.alibaba.rocketmq.client.exception.MQClientException;
-import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 
 public class ConsumerFactory {
 	public static synchronized DefaultMQPushConsumer mkPushConsumerInstance(MessageListenerConcurrently listener) throws MQClientException {
@@ -20,9 +19,9 @@ public class ConsumerFactory {
 		pushConsumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
 		pushConsumer.subscribe(RaceConfig.MqTmallTradeTopic, "*");
 
-		pushConsumer.setConsumeMessageBatchMaxSize(128);
-		pushConsumer.setPullBatchSize(64);
-		pushConsumer.setConsumeThreadMin(18);
+		pushConsumer.setConsumeMessageBatchMaxSize(64);
+		pushConsumer.setPullBatchSize(128);
+		pushConsumer.setConsumeThreadMin(15);
 		pushConsumer.registerMessageListener(listener);
 		pushConsumer.start();
 		
