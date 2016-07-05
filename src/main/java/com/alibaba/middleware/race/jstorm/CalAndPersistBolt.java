@@ -89,7 +89,7 @@ public class CalAndPersistBolt implements IRichBolt {
 				writeCount++;
 
 			}
-		}, 45 * 1000, 60 * 1000);
+		}, 40 * 1000, 60 * 1000);
 	}
 
 	@Override
@@ -97,12 +97,17 @@ public class CalAndPersistBolt implements IRichBolt {
 		// TODO Auto-generated method stub
 		String identifier = input.getString(0);
 		PaymentMessage payMessage = (PaymentMessage) input.getValue(1);
-		
-		Long timeKey = (payMessage.getCreateTime() / 1000 / 60) * 60;
+
+//		if(identifier.equals(RaceConfig.TaobaoIdentifier)){
+//		logger.info(
+//				RaceConfig.LogTracker + "ZY calbolt get payment,identifier:" + identifier + ",message:" + payMessage);
+//		}
+		Long timeKey = payMessage.getCreateTime();
 		double amount = payMessage.getPayAmount();
 
 		// pay的话说明用于计算ratio 而且不ack
-		if (identifier.equals(RaceConfig.PayIdentifier)) {
+		switch (identifier) {
+		case RaceConfig.PayIdentifier:
 			if (!wpRatioMap.containsKey(timeKey)) {
 				ratioLock.lock();
 
@@ -115,7 +120,7 @@ public class CalAndPersistBolt implements IRichBolt {
 						ratio.incrWirelessValue(amount);
 					}
 					add = false;
-					logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add ratioMap,timeKey:" + timeKey);
+					//logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add ratioMap,timeKey:" + timeKey);
 				}
 				try {
 					if (add) {
@@ -139,7 +144,8 @@ public class CalAndPersistBolt implements IRichBolt {
 					ratio.incrWirelessValue(amount);
 				}
 			}
-		} else if (identifier.equals(RaceConfig.TaobaoIdentifier)) {
+			break;
+		case RaceConfig.TaobaoIdentifier:
 			// 10位的时间戳，此处不转成String 防止字符串拼接的开销
 
 			// 当map中不存在key的时候 需要lock住map,否则多线程的put结果可能会覆盖
@@ -151,7 +157,7 @@ public class CalAndPersistBolt implements IRichBolt {
 				if (taobaoOrderTranMap.containsKey(timeKey)) {
 					taobaoOrderTranMap.get(timeKey).incrValue(amount);
 					add = false;
-					logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add taobaoMap,timeKey:" + timeKey);
+					//logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add taobaoMap,timeKey:" + timeKey);
 				}
 				try {
 					if (add) {
@@ -167,8 +173,9 @@ public class CalAndPersistBolt implements IRichBolt {
 			}
 			// taobao和tmall的paymessage需要ack
 			collector.ack(input);
-		} else {
-			if (identifier.equals(RaceConfig.TmallIdentifier)) {
+			break;
+		case RaceConfig.TmallIdentifier:
+
 				// 同上
 				if (!tmallOrderTranMap.contains(timeKey)) {
 					tmallLock.lock();
@@ -177,7 +184,7 @@ public class CalAndPersistBolt implements IRichBolt {
 					if (tmallOrderTranMap.containsKey(timeKey)) {
 						tmallOrderTranMap.get(timeKey).incrValue(amount);
 						add = false;
-						logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add tmallMap:" + timeKey);
+						//logger.info(RaceConfig.LogTracker + "ZY CalBolt get conlicts add tmallMap:" + timeKey);
 					}
 					try {
 						if (add) {
@@ -193,17 +200,12 @@ public class CalAndPersistBolt implements IRichBolt {
 				}
 				// taobao和tmall的paymessage需要ack
 				collector.ack(input);
-			} else {
-				// logger.error(RaceConfig.LogTracker + "CalBolt unrecognized
-				// Identifier:" + identifier + ",message:"
-				// + payMessage);
-			}
+			break;
+		default:
+			break;
 		}
-
-
-		
 	}
-
+	
 	private static double round2(double value) {
 
 		long factor = (long) 100;
@@ -218,14 +220,14 @@ public class CalAndPersistBolt implements IRichBolt {
 			ResultCode code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexTaobao + entry.getKey(),
 					entry.getValue().getValue());
 			if (!code.isSuccess()) {
-				logger.error(RaceConfig.LogTracker + "ZY CalBolt put taobao error,code" + code.getCode() + ",message:"
-						+ code.getMessage() + ",key:" + entry.getKey());
+//				logger.error(RaceConfig.LogTracker + "ZY CalBolt put taobao error,code" + code.getCode() + ",message:"
+//						+ code.getMessage() + ",key:" + entry.getKey());
 			} else {
-				logger.info(RaceConfig.LogTracker + "ZY CalBolt put taobao success,key:" + entry.getKey() + ",value:"
-						+ entry.getValue().getValue());
+//				logger.info(RaceConfig.LogTracker + "ZY CalBolt put taobao success,key:" + entry.getKey() + ",value:"
+//						+ entry.getValue().getValue());
 			}
 		}
-		logger.info(RaceConfig.LogTracker + "ZY CalBolt put taobao time:" + writeCount);
+		//logger.info(RaceConfig.LogTracker + "ZY CalBolt put taobao time:" + writeCount);
 	}
 
 	private void writeTmall() {
@@ -234,14 +236,14 @@ public class CalAndPersistBolt implements IRichBolt {
 			ResultCode code = tairClient.put(RaceConfig.TairNamespace, RaceConfig.PrexTmall + entry.getKey(),
 					entry.getValue().getValue());
 			if (!code.isSuccess()) {
-				logger.error(RaceConfig.LogTracker + "ZY CalBolt put tmall error,code" + code.getCode() + ",message:"
-						+ code.getMessage() + ",data:" + entry.getKey());
+//				logger.error(RaceConfig.LogTracker + "ZY CalBolt put tmall error,code" + code.getCode() + ",message:"
+//						+ code.getMessage() + ",data:" + entry.getKey());
 			} else {
-				logger.info(RaceConfig.LogTracker + "ZY CalBolt put tmall success,key:" + entry.getKey() + ",value:"
-						+ entry.getValue().getValue());
+//				logger.info(RaceConfig.LogTracker + "ZY CalBolt put tmall success,key:" + entry.getKey() + ",value:"
+//						+ entry.getValue().getValue());
 			}
 		}
-		logger.info(RaceConfig.LogTracker + "ZY CalBolt put tmall time:" + writeCount);
+		//logger.info(RaceConfig.LogTracker + "ZY CalBolt put tmall time:" + writeCount);
 	}
 
 	private void writeRatio() {
@@ -276,11 +278,11 @@ public class CalAndPersistBolt implements IRichBolt {
 			}
 
 			if (!code.isSuccess()) {
-				logger.error(RaceConfig.LogTracker + "ZY CalBolt put ratio error,code" + code.getCode() + ",message:"
-						+ code.getMessage() + ",data:" + mapping.getKey());
+//				logger.error(RaceConfig.LogTracker + "ZY CalBolt put ratio error,code" + code.getCode() + ",message:"
+//						+ code.getMessage() + ",data:" + mapping.getKey());
 			} else {
-				logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio success,key:" + mapping.getKey() + ",value:"
-						+ wireLessValue + "/" + pcValue);
+//				logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio success,key:" + mapping.getKey() + ",value:"
+//						+ wireLessValue + "/" + pcValue);
 			}
 		}
 		logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio time:" + writeCount);

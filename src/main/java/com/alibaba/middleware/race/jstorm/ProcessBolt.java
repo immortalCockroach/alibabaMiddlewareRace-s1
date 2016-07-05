@@ -3,13 +3,11 @@ package com.alibaba.middleware.race.jstorm;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.RaceDataStorage;
 import com.alibaba.middleware.race.model.MetaTuple;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
@@ -75,8 +73,8 @@ public class ProcessBolt implements IRichBolt {
 					taobaoOrderMap.remove(orderId);
 				}
 				// taobao付款消息
-				logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve taobaoOrder,identifier:" + topicIdentifier
-						+ ",key" + orderId);
+//				logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve taobaoOrder,identifier:" + topicIdentifier
+//						+ ",key" + orderId);
 				sendMessage(input, RaceConfig.TaobaoIdentifier, payMessage);
 				collector.ack(input);
 			} else {
@@ -89,22 +87,22 @@ public class ProcessBolt implements IRichBolt {
 						tmallOrderMap.remove(orderId);
 					}
 
-					logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve tmallOrder,identifier:"
-							+ topicIdentifier + ",key" + orderId);
+//					logger.info(RaceConfig.LogTracker + "ZY processBolt retrieve tmallOrder,identifier:"
+//							+ topicIdentifier + ",key" + orderId);
 					// tmall付款消息
 					sendMessage(input, RaceConfig.TmallIdentifier, payMessage);
 					collector.ack(input);
 				} else {
 					// 没找到直接fail
-					logger.warn(RaceConfig.LogTracker + "ZY processBolt payMessage not found:" + orderId);
+//					logger.warn(RaceConfig.LogTracker + "ZY processBolt payMessage not found:" + orderId);
 					collector.fail(input);
 				}
 			}
 
 			break;
 		case RaceConfig.TmallIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt get tmallOrder,identifier:" + topicIdentifier + ",key"
-					+ ((OrderMessage) message).getOrderId());
+//			logger.info(RaceConfig.LogTracker + "ZY processBolt get tmallOrder,identifier:" + topicIdentifier + ",key"
+//					+ ((OrderMessage) message).getOrderId());
 
 			// 需要有消息的去重过程 此处考虑到完全相同的消息不太可能同时到来 所以没有用锁
 			OrderMessage tmallOrder = (OrderMessage) message;
@@ -112,23 +110,23 @@ public class ProcessBolt implements IRichBolt {
 				tmallOrderMap.put(tmallOrder.getOrderId(), tmallOrder);
 				collector.ack(input);
 			} else {
-				logger.warn(RaceConfig.LogTracker + "ZY processBolg get repeat tmallOder,identifier:"
-						+ tmallOrder.getOrderId());
+//				logger.warn(RaceConfig.LogTracker + "ZY processBolg get repeat tmallOder,identifier:"
+//						+ tmallOrder.getOrderId());
 				collector.fail(input);
 			}
 
 			break;
 		case RaceConfig.TaobaoIdentifier:
-			logger.info(RaceConfig.LogTracker + "ZY processBolt get taobaoOrder,identifier:" + topicIdentifier + ",key"
-					+ ((OrderMessage) message).getOrderId());
+//			logger.info(RaceConfig.LogTracker + "ZY processBolt get taobaoOrder,identifier:" + topicIdentifier + ",key"
+//					+ ((OrderMessage) message).getOrderId());
 
 			OrderMessage taobaoOrder = (OrderMessage) message;
 			if (!taobaoOrderMap.containsKey(taobaoOrder.getOrderId())) {
-				tmallOrderMap.put(taobaoOrder.getOrderId(), taobaoOrder);
+				taobaoOrderMap.put(taobaoOrder.getOrderId(), taobaoOrder);
 				collector.ack(input);
 			} else {
-				logger.warn(RaceConfig.LogTracker + "ZY processBolg get repeat taobaoOrder,identifier:"
-						+ taobaoOrder.getOrderId());
+//				logger.warn(RaceConfig.LogTracker + "ZY processBolg get repeat taobaoOrder,identifier:"
+//						+ taobaoOrder.getOrderId());
 				collector.fail(input);
 			}
 

@@ -190,8 +190,8 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 				}
 
 			} else {
-				logger.warn(RaceConfig.LogTracker + "ZY spout payMessage failed more than 5 times,payMsg:"
-						+ tuple.getMessage());
+//				logger.warn(RaceConfig.LogTracker + "ZY spout payMessage failed more than 5 times,payMsg:"
+//						+ tuple.getMessage());
 			}
 		} else {
 			// 订单信息直接丢弃，因为可能是重复的订单信息
