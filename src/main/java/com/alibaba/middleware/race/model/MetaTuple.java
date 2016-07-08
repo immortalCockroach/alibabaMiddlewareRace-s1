@@ -12,7 +12,7 @@ public class MetaTuple {
 	private AtomicInteger failTimes;
 
 	private PaymentMessage message;
-	public static final int MAX_FAIL_TIMES = 5;
+	public static final int MAX_FAIL_TIMES = 10;
 	// private CountDownLatch latch;
 
 	private boolean isSendForRatio;

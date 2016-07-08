@@ -98,7 +98,7 @@ public class CalAndPersistBolt implements IRichBolt {
 				writeCount++;
 
 			}
-		}, 30 * 1000, 30 * 1000);
+		}, 30 * 1000, 60 * 1000);
 	}
 
 	@Override
