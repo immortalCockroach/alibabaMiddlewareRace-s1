@@ -158,7 +158,7 @@ public class CalAndPersistBolt implements IRichBolt {
 			// 10位的时间戳，此处不转成String 防止字符串拼接的开销
 
 			// 当map中不存在key的时候 需要lock住map,否则多线程的put结果可能会覆盖
-			if (!taobaoOrderTranMap.contains(timeKey)) {
+			if (!taobaoOrderTranMap.containsKey(timeKey)) {
 				taobaoMapLock.lock();
 
 				// 防止2个线程同时得到containKey为false时的冲突
@@ -186,7 +186,7 @@ public class CalAndPersistBolt implements IRichBolt {
 		case RaceConfig.TmallIdentifier:
 
 				// 同上
-				if (!tmallOrderTranMap.contains(timeKey)) {
+				if (!tmallOrderTranMap.containsKey(timeKey)) {
 					tmallLock.lock();
 
 					boolean add = true;
