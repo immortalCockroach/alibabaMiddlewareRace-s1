@@ -1,5 +1,6 @@
 package com.alibaba.middleware.race.model;
 
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -8,7 +9,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 打不死的小强
  *
  */
-public class MetaTuple {
+public class MetaTuple implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4547104558060218248L;
+
 	private AtomicInteger failTimes;
 
 	private PaymentMessage message;

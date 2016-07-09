@@ -350,7 +350,9 @@ public class CalAndPersistBolt implements IRichBolt {
 	@Override
 	public void cleanup() {
 		// TODO Auto-generated method stub
-
+		writeRatio();
+		writeTaobao();
+		writeTmall();
 	}
 
 }

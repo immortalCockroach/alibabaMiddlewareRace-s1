@@ -34,7 +34,7 @@ public class TopicEmitSpout implements IRichSpout, MessageListenerConcurrently, 
 
 	private static final Logger logger = LoggerFactory.getLogger(TopicEmitSpout.class);
 	private SpoutOutputCollector spoutCollector;
-	private DefaultMQPushConsumer consumer;
+	private transient DefaultMQPushConsumer consumer;
 	private LinkedBlockingQueue<MetaTuple> emitQueue;
 	// flowControl只针对pay消息,防止pay消息过多而在ProcessBolt中产生堆积（而Order消息必须堆积，所以暂时不考虑流量控制）
 	private volatile boolean flowControl;

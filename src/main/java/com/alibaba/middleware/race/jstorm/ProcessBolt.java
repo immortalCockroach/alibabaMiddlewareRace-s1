@@ -27,7 +27,7 @@ public class ProcessBolt implements IRichBolt {
 	// 如果这个ProcessBolt是单线程的话 可以考虑换成普通的HashMap
 	private ConcurrentHashMap<Long, OrderMessage> taobaoOrderMap;
 	private ConcurrentHashMap<Long, OrderMessage> tmallOrderMap;
-	private OutputCollector collector;
+	private transient OutputCollector collector;
 
 
 	@Override
@@ -158,7 +158,7 @@ public class ProcessBolt implements IRichBolt {
 	@Override
 	public void cleanup() {
 		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
