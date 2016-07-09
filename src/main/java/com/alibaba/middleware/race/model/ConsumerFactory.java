@@ -22,7 +22,6 @@ public class ConsumerFactory {
 		pushConsumer.setConsumeMessageBatchMaxSize(64);
 		pushConsumer.setPullBatchSize(128);
 		pushConsumer.setConsumeThreadMin(15);
-		pushConsumer.setConsumeThreadMax(30);
 		pushConsumer.registerMessageListener(listener);
 		pushConsumer.start();
 		

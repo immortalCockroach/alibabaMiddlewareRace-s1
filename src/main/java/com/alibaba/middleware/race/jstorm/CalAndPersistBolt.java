@@ -93,7 +93,7 @@ public class CalAndPersistBolt implements IRichBolt {
 				writeRatio();
 
 			}
-		}, 30 * 1000, 15 * 1000);
+		}, 30 * 1000, 30 * 1000);
 	}
 
 	@Override
@@ -106,7 +106,7 @@ public class CalAndPersistBolt implements IRichBolt {
 //		logger.info(
 //				RaceConfig.LogTracker + "ZY calbolt get payment,identifier:" + identifier + ",message:" + payMessage);
 //		}
-		Long timeKey = (payMessage.getCreateTime() / 1000 /60) * 60;
+		Long timeKey = (payMessage.getCreateTime() / 1000 / 60) * 60;
 		double amount = payMessage.getPayAmount();
 
 		// pay的话说明用于计算ratio 而且不ack

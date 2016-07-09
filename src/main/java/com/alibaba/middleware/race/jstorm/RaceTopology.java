@@ -21,7 +21,7 @@ public class RaceTopology {
 		Config conf = new Config();
 
 		conf.setNumAckers(1);
-		conf.setNumWorkers(4);
+		conf.setNumWorkers(3);
 		int spout_Parallelism_hint = 4;
 		int process_Parallelism_hint = 1;
 		int cal_Parallelism_hint = 3;
