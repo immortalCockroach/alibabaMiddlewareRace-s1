@@ -20,7 +20,6 @@ import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.model.OrderTranValue;
 import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.middleware.race.model.WPRatio;
-import com.taobao.tair.ResultCode;
 import com.taobao.tair.impl.DefaultTairManager;
 
 import backtype.storm.task.OutputCollector;
@@ -48,9 +47,7 @@ public class CalAndPersistBolt implements IRichBolt {
 	private Lock taobaoMapLock;
 	private Lock tmallLock;
 	private Lock ratioLock;
-
-	private int writeCount;
-
+	
 	private OutputCollector collector;
 
 	@Override
@@ -71,7 +68,6 @@ public class CalAndPersistBolt implements IRichBolt {
 		tmallLock = new ReentrantLock();
 		ratioLock = new ReentrantLock();
 
-		writeCount = 0;
 
 		List<String> confServers = new ArrayList<String>();
 		confServers.add(RaceConfig.TairConfigServer);
@@ -95,10 +91,9 @@ public class CalAndPersistBolt implements IRichBolt {
 				writeTaobao();
 				writeTmall();
 				writeRatio();
-				writeCount++;
 
 			}
-		}, 30 * 1000, 60 * 1000);
+		}, 30 * 1000, 15 * 1000);
 	}
 
 	@Override
@@ -332,7 +327,7 @@ public class CalAndPersistBolt implements IRichBolt {
 ////						+ wireLessValue + "/" + pcValue);
 //			}
 		}
-		logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio time:" + writeCount);
+		//logger.info(RaceConfig.LogTracker + "ZY CalBolt put ratio time:" + writeCount);
 	}
 
 	@Override

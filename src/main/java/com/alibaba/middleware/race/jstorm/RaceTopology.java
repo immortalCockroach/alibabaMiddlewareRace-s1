@@ -22,7 +22,7 @@ public class RaceTopology {
 
 		conf.setNumAckers(1);
 		conf.setNumWorkers(4);
-		int spout_Parallelism_hint = 2;
+		int spout_Parallelism_hint = 4;
 		int process_Parallelism_hint = 1;
 		int cal_Parallelism_hint = 3;
 		conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 200000);

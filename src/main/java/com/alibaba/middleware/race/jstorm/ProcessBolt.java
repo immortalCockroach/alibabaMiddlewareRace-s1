@@ -22,7 +22,7 @@ import backtype.storm.tuple.Values;
 
 public class ProcessBolt implements IRichBolt {
 
-	private Logger logger = LoggerFactory.getLogger(ProcessBolt.class);
+	//private Logger logger = LoggerFactory.getLogger(ProcessBolt.class);
 
 	// 如果这个ProcessBolt是单线程的话 可以考虑换成普通的HashMap
 	private ConcurrentHashMap<Long, OrderMessage> taobaoOrderMap;
@@ -40,7 +40,7 @@ public class ProcessBolt implements IRichBolt {
 				RaceConfig.processMapEntryArraySize);
 
 
-		logger.info(RaceConfig.LogTracker + "ZY processBolt init finished.");
+		//logger.info(RaceConfig.LogTracker + "ZY processBolt init finished.");
 	}
 
 	@Override
@@ -132,8 +132,8 @@ public class ProcessBolt implements IRichBolt {
 
 			break;
 		default:
-			logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier
-					+ ",message:" + message);
+			//logger.error(RaceConfig.LogTracker + "ZY processBolt unrecognized Identifier:" + topicIdentifier
+			//		+ ",message:" + message);
 			break;
 		}
 
