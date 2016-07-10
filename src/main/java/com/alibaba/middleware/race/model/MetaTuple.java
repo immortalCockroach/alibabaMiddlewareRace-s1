@@ -18,7 +18,7 @@ public class MetaTuple implements Serializable{
 	private AtomicInteger failTimes;
 
 	private PaymentMessage message;
-	public static final int MAX_FAIL_TIMES = 10;
+	public static final int MAX_FAIL_TIMES = 20;
 	// private CountDownLatch latch;
 
 	private boolean isSendForRatio;
