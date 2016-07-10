@@ -43,7 +43,7 @@ public class RaceConfig implements Serializable {
 
 	public static final int processMapEntryArraySize = 32;
 
-	public static final int ThresholdACK = 100000;
+	public static final int ThresholdACK = 25000;
 
-	public static final int ThresholdFail = 100000;
+	public static final int ThresholdFail = 25000;
 }
