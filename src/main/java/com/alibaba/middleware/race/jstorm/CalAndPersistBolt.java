@@ -93,7 +93,7 @@ public class CalAndPersistBolt implements IRichBolt {
 				writeRatio();
 
 			}
-		}, 30 * 1000, 45 * 1000);
+		}, 45 * 1000, 80 * 1000);
 	}
 
 	@Override
